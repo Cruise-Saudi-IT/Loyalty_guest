@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aroya - Guest Multi-Itinerary Finder</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-bottom: 1px solid #334155;
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #f8fafc;
+        }
+        .header h1 span { color: #38bdf8; }
+        .header-sub {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        /* Stats Cards */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            padding: 24px 40px;
+        }
+        .stat-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-card .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #38bdf8;
+        }
+        .stat-card .stat-label {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stat-card.highlight .stat-value { color: #f59e0b; }
+        .stat-card.green .stat-value { color: #34d399; }
+
+        /* Controls */
+        .controls {
+            padding: 0 40px 16px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .controls input, .controls select {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+        .controls input:focus, .controls select:focus {
+            border-color: #38bdf8;
+        }
+        .controls input { flex: 1; min-width: 250px; }
+        .btn {
+            background: #38bdf8;
+            color: #0f172a;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: #7dd3fc; }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #38bdf8;
+            color: #38bdf8;
+        }
+        .btn-outline:hover { background: rgba(56, 189, 248, 0.1); }
+
+        /* Content */
+        .content { padding: 0 40px 40px; }
+
+        /* Duplicate Group Card */
+        .dup-group {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        .dup-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .dup-header:hover { background: #253149; }
+        .dup-header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .dup-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #38bdf8;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .dup-info h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #f8fafc;
+        }
+        .dup-info .dup-meta {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+        .dup-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-pkg {
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+        }
+        .badge-count {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+        .chevron {
+            color: #64748b;
+            transition: transform 0.2s;
+            font-size: 18px;
+        }
+        .dup-group.open .chevron { transform: rotate(180deg); }
+
+        /* Expanded Details */
+        .dup-details {
+            display: none;
+            border-top: 1px solid #334155;
+        }
+        .dup-group.open .dup-details { display: block; }
+
+        .guest-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .guest-table thead {
+            background: #0f172a;
+        }
+        .guest-table th {
+            padding: 10px 12px;
+            text-align: left;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .guest-table td {
+            padding: 10px 12px;
+            border-top: 1px solid #1a2538;
+            color: #cbd5e1;
+            white-space: nowrap;
+        }
+        .guest-table tr:hover td {
+            background: rgba(56, 189, 248, 0.04);
+        }
+        .pkg-highlight {
+            color: #38bdf8;
+            font-weight: 600;
+        }
+        .status-bk {
+            color: #34d399;
+        }
+        .status-cn {
+            color: #f87171;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #64748b;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #334155;
+            border-top-color: #38bdf8;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Error */
+        .error-box {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            border-radius: 8px;
+            padding: 16px 20px;
+            color: #fca5a5;
+            margin: 20px 40px;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #64748b;
+        }
+        .empty-state h3 {
+            font-size: 18px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+
+        /* Scrollable table wrapper */
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        /* Export bar */
+        .export-bar {
+            padding: 0 40px 16px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div>
+        <h1><span>Aroya</span> Guest Multi-Itinerary Finder</h1>
+        <div class="header-sub">Identify guests booked across multiple cruise packages</div>
+    </div>
+    <div class="header-sub" id="lastUpdated"></div>
+</div>
+
+<div class="stats-row" id="statsRow">
+    <div class="stat-card"><div class="stat-value" id="statTotal">--</div><div class="stat-label">Total Guests</div></div>
+    <div class="stat-card"><div class="stat-value" id="statPackages">--</div><div class="stat-label">Packages</div></div>
+    <div class="stat-card highlight"><div class="stat-value" id="statGroups">--</div><div class="stat-label">Duplicate Groups</div></div>
+    <div class="stat-card highlight"><div class="stat-value" id="statDupGuests">--</div><div class="stat-label">Bookings in Duplicates</div></div>
+    <div class="stat-card green"><div class="stat-value" id="statRevenue">--</div><div class="stat-label">Revenue (Duplicates)</div></div>
+</div>
+
+<div class="controls">
+    <input type="text" id="searchInput" placeholder="Search by name, email, package, phone..." />
+    <select id="filterPackage">
+        <option value="">All Packages</option>
+    </select>
+    <button class="btn" onclick="loadData()">Refresh</button>
+</div>
+
+<div class="export-bar">
+    <button class="btn btn-outline" onclick="exportCSV()">Export CSV</button>
+</div>
+
+<div class="content" id="mainContent">
+    <div class="loading">
+        <div class="spinner"></div>
+        Loading guest data from database...
+    </div>
+</div>
+
+<script>
+let allDuplicates = [];
+let allStats = {};
+
+async function loadData() {
+    const content = document.getElementById('mainContent');
+    content.innerHTML = '<div class="loading"><div class="spinner"></div>Loading guest data from database...</div>';
+
+    try {
+        const [dupRes, statsRes] = await Promise.all([
+            fetch('/api/duplicates'),
+            fetch('/api/stats')
+        ]);
+
+        if (!dupRes.ok) throw new Error('Failed to fetch duplicates');
+        if (!statsRes.ok) throw new Error('Failed to fetch stats');
+
+        const dupData = await dupRes.json();
+        const statsData = await statsRes.json();
+
+        if (dupData.error) throw new Error(dupData.error);
+        if (statsData.error) throw new Error(statsData.error);
+
+        allDuplicates = dupData.duplicates;
+        allStats = statsData;
+
+        document.getElementById('statTotal').textContent = statsData.total_guests.toLocaleString();
+        document.getElementById('statPackages').textContent = statsData.total_packages;
+        document.getElementById('statGroups').textContent = statsData.duplicate_groups;
+        document.getElementById('statDupGuests').textContent = statsData.guests_in_duplicates;
+        document.getElementById('statRevenue').textContent = statsData.revenue_from_duplicates.toLocaleString();
+        document.getElementById('lastUpdated').textContent = 'Updated: ' + new Date().toLocaleString();
+
+        // Populate package filter
+        const pkgSet = new Set();
+        allDuplicates.forEach(d => d.packages.forEach(p => pkgSet.add(p)));
+        const pkgSelect = document.getElementById('filterPackage');
+        pkgSelect.innerHTML = '<option value="">All Packages</option>';
+        [...pkgSet].sort().forEach(p => {
+            pkgSelect.innerHTML += `<option value="${p}">${p}</option>`;
+        });
+
+        renderDuplicates(allDuplicates);
+    } catch (err) {
+        content.innerHTML = '';
+        document.getElementById('mainContent').insertAdjacentHTML('beforebegin',
+            `<div class="error-box">Error: ${err.message}</div>`);
+    }
+}
+
+function renderDuplicates(dups) {
+    const content = document.getElementById('mainContent');
+
+    if (dups.length === 0) {
+        content.innerHTML = '<div class="empty-state"><h3>No Duplicates Found</h3><p>No guests matched across multiple packages with the current filters.</p></div>';
+        return;
+    }
+
+    let html = '';
+    dups.forEach((dup, idx) => {
+        const initials = (dup.guest_name || '??').split(' ').map(w => w[0]).join('').slice(0, 2);
+        const pkgBadges = dup.packages.map(p => `<span class="badge badge-pkg">${esc(p)}</span>`).join('');
+
+        html += `
+        <div class="dup-group" id="group-${idx}">
+            <div class="dup-header" onclick="toggleGroup(${idx})">
+                <div class="dup-header-left">
+                    <div class="dup-avatar">${esc(initials)}</div>
+                    <div class="dup-info">
+                        <h3>${esc(dup.guest_name)}</h3>
+                        <div class="dup-meta">${esc(dup.email)} &bull; ...${esc(dup.phone_last9)} &bull; DOB: ${esc(dup.birthday)}</div>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                    ${pkgBadges}
+                    <span class="badge badge-count">${dup.booking_count} bookings</span>
+                    <span class="badge" style="background:rgba(52,211,153,0.15);color:#34d399;">Total: ${num(dup.guest_total_spent)}</span>
+                    <span class="chevron">&#9660;</span>
+                </div>
+            </div>
+            <div class="dup-details">
+                <div class="table-wrap">
+                    <table class="guest-table">
+                        <thead>
+                            <tr>
+                                <th>Full Name</th>
+                                <th>Client ID</th>
+                                <th>Guest ID</th>
+                                <th>Res ID</th>
+                                <th>Package</th>
+                                <th>Sail From</th>
+                                <th>Sail To</th>
+                                <th>Cabin</th>
+                                <th>Status</th>
+                                <th>Cabin Fare</th>
+                                <th>Port Charges</th>
+                                <th>Service Fee</th>
+                                <th>Total Net</th>
+                                <th>Res Total</th>
+                                <th>Currency</th>
+                                <th>Source</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+        dup.guests.forEach(g => {
+            const statusClass = g.RES_STATUS === 'BK' ? 'status-bk' : g.RES_STATUS === 'CN' ? 'status-cn' : '';
+            html += `
+                            <tr>
+                                <td>${esc(g.FULL_NAME)}</td>
+                                <td>${esc(g.CLIENT_ID)}</td>
+                                <td>${esc(g.GUEST_ID)}</td>
+                                <td>${esc(g.RES_ID)}</td>
+                                <td class="pkg-highlight">${esc(g.PACKAGE_TYPE)}</td>
+                                <td>${formatDate(g.SAIL_DATE_FROM)}</td>
+                                <td>${formatDate(g.SAIL_DATE_TO)}</td>
+                                <td>${esc(g.GUEST_CABIN)}</td>
+                                <td class="${statusClass}">${esc(g.RES_STATUS)}</td>
+                                <td>${num(g.CABIN_FARE_NET)}</td>
+                                <td>${num(g.PORT_CHARGES_NET)}</td>
+                                <td>${num(g.SERVICE_FEE_NET)}</td>
+                                <td><strong>${num(g.TOTAL_NET_AMOUNT)}</strong></td>
+                                <td><strong>${num(g.RES_TOTAL_NET)}</strong></td>
+                                <td>${esc(g.CURRENCY_CODE)}</td>
+                                <td>${esc(g.SOURCE_CODE)}</td>
+                            </tr>`;
+        });
+
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>`;
+    });
+
+    content.innerHTML = html;
+}
+
+function toggleGroup(idx) {
+    document.getElementById('group-' + idx).classList.toggle('open');
+}
+
+function esc(val) {
+    if (val == null) return '';
+    const div = document.createElement('div');
+    div.textContent = String(val);
+    return div.innerHTML;
+}
+
+function num(val) {
+    if (val == null) return '0';
+    return Number(val).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2});
+}
+
+function formatDate(val) {
+    if (!val) return '';
+    try {
+        const d = new Date(val);
+        if (isNaN(d)) return esc(val);
+        return d.toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: '2-digit'});
+    } catch { return esc(val); }
+}
+
+// Search & filter
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+document.getElementById('filterPackage').addEventListener('change', applyFilters);
+
+function applyFilters() {
+    const q = document.getElementById('searchInput').value.toLowerCase().trim();
+    const pkg = document.getElementById('filterPackage').value;
+
+    let filtered = allDuplicates;
+
+    if (pkg) {
+        filtered = filtered.filter(d => d.packages.includes(pkg));
+    }
+
+    if (q) {
+        filtered = filtered.filter(d => {
+            if (d.guest_name.toLowerCase().includes(q)) return true;
+            if (d.email.toLowerCase().includes(q)) return true;
+            if (d.phone_last9.includes(q)) return true;
+            if (d.packages.some(p => p.toLowerCase().includes(q))) return true;
+            if (d.guests.some(g =>
+                (g.FULL_NAME || '').toLowerCase().includes(q) ||
+                String(g.GUEST_ID).includes(q) ||
+                String(g.RES_ID).includes(q)
+            )) return true;
+            return false;
+        });
+    }
+
+    renderDuplicates(filtered);
+}
+
+// CSV Export
+function exportCSV() {
+    if (!allDuplicates.length) return;
+    const headers = ['Group','Full Name','Client ID','Guest ID','Res ID','Email','Phone','Birthday','Package','Sail From','Sail To','Cabin','Status','Cabin Fare','Port Charges','Service Fee','Total Net','Res Total','Guest Total Spent','Currency'];
+    let csv = headers.join(',') + '\n';
+
+    allDuplicates.forEach((dup, i) => {
+        dup.guests.forEach(g => {
+            csv += [
+                i + 1,
+                '"' + (g.FULL_NAME || '') + '"',
+                g.CLIENT_ID,
+                g.GUEST_ID,
+                g.RES_ID,
+                '"' + (g.EMAIL || '') + '"',
+                '"' + (g.PHONE_NUMBER || '') + '"',
+                '"' + (dup.birthday || '') + '"',
+                '"' + (g.PACKAGE_TYPE || '') + '"',
+                '"' + (g.SAIL_DATE_FROM || '') + '"',
+                '"' + (g.SAIL_DATE_TO || '') + '"',
+                g.GUEST_CABIN,
+                g.RES_STATUS,
+                g.CABIN_FARE_NET,
+                g.PORT_CHARGES_NET,
+                g.SERVICE_FEE_NET,
+                g.TOTAL_NET_AMOUNT,
+                g.RES_TOTAL_NET,
+                dup.guest_total_spent,
+                g.CURRENCY_CODE
+            ].join(',') + '\n';
+        });
+    });
+
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'guest_duplicates_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// Initial load
+loadData();
+</script>
+</body>
+</html>
