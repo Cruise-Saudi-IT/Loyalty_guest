@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Flask logs
+flask.log
+flask.err.log
+
+# Node / Vite (frontend build)
+frontend/node_modules/
+frontend/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Secrets
+.env
+
+# PII / internal data dumps
+static/EmployeeList.txt

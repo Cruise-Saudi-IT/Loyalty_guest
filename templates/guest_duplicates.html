@@ -3,554 +3,1825 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aroya - Guest Multi-Itinerary Finder</title>
+    <title>Aroya - Repeat Guests Insights</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; -webkit-font-smoothing: antialiased; }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0f172a;
-            color: #e2e8f0;
-            min-height: 100vh;
-        }
-
-        /* Header */
-        .header {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            border-bottom: 1px solid #334155;
-            padding: 20px 40px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .header h1 {
-            font-size: 24px;
-            font-weight: 600;
-            color: #f8fafc;
-        }
+        .header { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-bottom: 1px solid #334155; padding: 16px 40px; display: flex; align-items: center; justify-content: space-between; }
+        .header-left { display: flex; align-items: center; gap: 20px; }
+        .header-logo { height: 56px; width: auto; object-fit: contain; }
+        .header h1 { font-size: 24px; font-weight: 600; color: #f8fafc; }
         .header h1 span { color: #38bdf8; }
-        .header-sub {
-            color: #94a3b8;
-            font-size: 14px;
-        }
+        .header-sub { color: #94a3b8; font-size: 14px; }
 
-        /* Stats Cards */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-            padding: 24px 40px;
-        }
-        .stat-card {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-        }
-        .stat-card .stat-value {
-            font-size: 32px;
-            font-weight: 700;
-            color: #38bdf8;
-        }
-        .stat-card .stat-label {
-            font-size: 13px;
-            color: #94a3b8;
-            margin-top: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+        /* Tabs */
+        .tab-nav { display: flex; gap: 0; padding: 0 40px; background: #1e293b; border-bottom: 1px solid #334155; }
+        .tab-btn { background: none; border: none; color: #94a3b8; font-size: 14px; font-weight: 500; padding: 14px 24px; cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.2s, border-color 0.2s; }
+        .tab-btn:hover { color: #e2e8f0; }
+        .tab-btn.active { color: #38bdf8; border-bottom-color: #38bdf8; }
+
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+
+        /* Stats */
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; padding: 24px 40px; }
+        .stat-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; text-align: center; }
+        .stat-card .stat-value { font-size: 32px; font-weight: 700; color: #38bdf8; }
+        .stat-card .stat-label { font-size: 13px; color: #94a3b8; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
         .stat-card.highlight .stat-value { color: #f59e0b; }
         .stat-card.green .stat-value { color: #34d399; }
 
         /* Controls */
-        .controls {
-            padding: 0 40px 16px;
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .controls input, .controls select {
-            background: #1e293b;
-            border: 1px solid #334155;
-            color: #e2e8f0;
-            padding: 10px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            outline: none;
-        }
-        .controls input:focus, .controls select:focus {
-            border-color: #38bdf8;
-        }
+        .controls { padding: 0 40px 8px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .controls input, .controls select { background: #1e293b; border: 1px solid #334155; color: #e2e8f0; padding: 10px 16px; border-radius: 8px; font-size: 14px; outline: none; }
+        .controls input:focus, .controls select:focus { border-color: #38bdf8; }
         .controls input { flex: 1; min-width: 250px; }
-        .btn {
-            background: #38bdf8;
-            color: #0f172a;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
+        .controls input.rev-input { flex: 0 0 130px; min-width: 110px; }
+        .filters { padding: 0 40px 16px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+        .filters .filters-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 4px; }
+        .filters select, .filters input { background: #0f172a; border: 1px solid #334155; color: #cbd5e1; padding: 6px 10px; border-radius: 6px; font-size: 12px; outline: none; max-width: 200px; }
+        .filters select:focus, .filters input:focus { border-color: #38bdf8; }
+        .filters input.rev-input { width: 130px; }
+        .filters .filter-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #cbd5e1; padding: 6px 10px; border: 1px solid #334155; border-radius: 6px; background: #0f172a; cursor: pointer; }
+        .filters .filter-toggle input[type=checkbox] { margin: 0; accent-color: #38bdf8; }
+        .btn-reset-filters { background: transparent; border: 1px solid #475569; color: #94a3b8; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+        .btn-reset-filters:hover { border-color: #f87171; color: #f87171; }
+        .privacy-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid #334155; border-radius: 8px; background: #1e293b; color: #cbd5e1; font-size: 12px; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+        .privacy-toggle:hover { border-color: #38bdf8; color: #f8fafc; }
+        .privacy-toggle.revealed { border-color: #f59e0b; color: #f59e0b; }
+        .btn { background: #38bdf8; color: #0f172a; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
         .btn:hover { background: #7dd3fc; }
-        .btn-outline {
-            background: transparent;
-            border: 1px solid #38bdf8;
-            color: #38bdf8;
-        }
-        .btn-outline:hover { background: rgba(56, 189, 248, 0.1); }
+        .btn-outline { background: transparent; border: 1px solid #38bdf8; color: #38bdf8; }
+        .btn-outline:hover { background: rgba(56,189,248,0.1); }
 
-        /* Content */
         .content { padding: 0 40px 40px; }
+        .export-bar { padding: 0 40px 16px; display: flex; justify-content: flex-end; gap: 8px; }
 
-        /* Duplicate Group Card */
-        .dup-group {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            overflow: hidden;
-        }
-        .dup-header {
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
+        /* Cards */
+        .dup-group { background: #1e293b; border: 1px solid #334155; border-radius: 12px; margin-bottom: 16px; overflow: visible; }
+        .dup-header { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: background 0.2s; }
         .dup-header:hover { background: #253149; }
-        .dup-header-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        .dup-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: #38bdf8;
-            color: #0f172a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 16px;
-        }
-        .dup-info h3 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #f8fafc;
-        }
-        .dup-info .dup-meta {
-            font-size: 13px;
-            color: #94a3b8;
-            margin-top: 2px;
-        }
-        .dup-badges {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .badge-pkg {
-            background: rgba(56, 189, 248, 0.15);
-            color: #38bdf8;
-        }
-        .badge-count {
-            background: rgba(245, 158, 11, 0.15);
-            color: #f59e0b;
-        }
-        .chevron {
-            color: #64748b;
-            transition: transform 0.2s;
-            font-size: 18px;
-        }
+        .dup-header-left { display: flex; align-items: center; gap: 16px; }
+        .dup-avatar { width: 44px; height: 44px; border-radius: 50%; background: #38bdf8; color: #0f172a; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+        .dup-total { background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3); border-radius: 8px; padding: 3px 8px; min-width: 72px; text-align: center; flex-shrink: 0; }
+        .dup-total-value { color: #34d399; font-size: 13px; font-weight: 700; line-height: 1.15; white-space: nowrap; }
+        .dup-total-label { color: #94a3b8; font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 1px; white-space: nowrap; }
+        .dup-totals { display: flex; gap: 4px; flex-shrink: 0; }
+        .dup-total.cabin { background: rgba(56,189,248,0.12); border-color: rgba(56,189,248,0.3); }
+        .dup-total.cabin .dup-total-value { color: #38bdf8; }
+        .dup-total.guest { background: rgba(168,85,247,0.12); border-color: rgba(168,85,247,0.3); }
+        .dup-total.guest .dup-total-value { color: #c084fc; }
+        .dup-total.score { background: rgba(250,204,21,0.12); border-color: rgba(250,204,21,0.35); position: relative; cursor: help; }
+        .dup-total.score .dup-total-value { color: #facc15; }
+        .score-tooltip { display: none; position: absolute; top: calc(100% + 8px); left: 0; z-index: 50; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 10px 14px; min-width: 290px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); font-size: 12px; color: #cbd5e1; text-align: left; line-height: 1.5; white-space: normal; }
+        .dup-total.score:hover .score-tooltip { display: block; }
+        .score-tooltip .st-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: #94a3b8; margin-bottom: 6px; }
+        .score-tooltip .st-row { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; }
+        .score-tooltip .st-row .st-label { flex: 1; }
+        .score-tooltip .st-row .st-pts { color: #64748b; font-variant-numeric: tabular-nums; min-width: 32px; text-align: right; }
+        .score-tooltip .st-row.st-hit .st-label { color: #e2e8f0; }
+        .score-tooltip .st-row.st-hit .st-pts { color: #34d399; font-weight: 700; }
+        .score-tooltip .st-row.st-miss .st-label { color: #64748b; text-decoration: line-through; text-decoration-color: rgba(100,116,139,0.3); }
+        .score-tooltip .st-row.st-neg .st-pts { color: #ef4444; font-weight: 700; }
+        .score-tooltip hr { border: 0; border-top: 1px solid #334155; margin: 8px 0 6px; }
+        .score-tooltip .st-total { display: flex; justify-content: space-between; gap: 12px; font-weight: 700; color: #facc15; }
+        .score-tooltip .st-note { margin-top: 6px; font-size: 10px; color: #64748b; font-style: italic; line-height: 1.3; }
+        .badge-more { background: #475569; color: #cbd5e1; cursor: help; }
+        .dup-info h3 { font-size: 16px; font-weight: 600; color: #f8fafc; }
+        .dup-info .dup-meta { font-size: 12px; color: #94a3b8; margin-top: 1px; line-height: 1.35; }
+        .dup-badges { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .badge-pkg { background: rgba(56,189,248,0.15); color: #38bdf8; }
+        .badge-count { background: rgba(245,158,11,0.15); color: #f59e0b; }
+        .chevron { color: #64748b; transition: transform 0.2s; font-size: 18px; }
         .dup-group.open .chevron { transform: rotate(180deg); }
-
-        /* Expanded Details */
-        .dup-details {
-            display: none;
-            border-top: 1px solid #334155;
-        }
+        .dup-details { display: none; border-top: 1px solid #334155; }
         .dup-group.open .dup-details { display: block; }
 
-        .guest-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-        .guest-table thead {
-            background: #0f172a;
-        }
-        .guest-table th {
-            padding: 10px 12px;
-            text-align: left;
-            color: #94a3b8;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 11px;
-            letter-spacing: 0.5px;
-            white-space: nowrap;
-        }
-        .guest-table td {
-            padding: 10px 12px;
-            border-top: 1px solid #1a2538;
-            color: #cbd5e1;
-            white-space: nowrap;
-        }
-        .guest-table tr:hover td {
-            background: rgba(56, 189, 248, 0.04);
-        }
-        .pkg-highlight {
-            color: #38bdf8;
-            font-weight: 600;
-        }
-        .status-bk {
-            color: #34d399;
-        }
-        .status-cn {
-            color: #f87171;
-        }
+        /* Table */
+        .table-wrap { overflow-x: auto; }
+        .guest-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .guest-table thead { background: #0f172a; }
+        .guest-table th { padding: 10px 12px; text-align: left; color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; white-space: nowrap; }
+        .guest-table td { padding: 10px 12px; border-top: 1px solid #1a2538; color: #cbd5e1; white-space: nowrap; }
+        .guest-table tr:hover td { background: rgba(56,189,248,0.04); }
+        .pkg-highlight { color: #38bdf8; font-weight: 600; }
+        .status-bk { color: #34d399; }
+        .status-cn { color: #f87171; }
 
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 60px;
-            color: #64748b;
-        }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #334155;
-            border-top-color: #38bdf8;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 16px;
-        }
+        /* Pagination */
+        .pagination { display: flex; align-items: center; justify-content: space-between; padding: 20px 0 8px; flex-wrap: wrap; gap: 12px; }
+        .pag-info { color: #94a3b8; font-size: 13px; }
+        .pag-controls { display: flex; gap: 4px; flex-wrap: wrap; }
+        .pag-btn { background: #1e293b; border: 1px solid #334155; color: #cbd5e1; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; min-width: 36px; transition: background 0.15s, border-color 0.15s; }
+        .pag-btn:hover:not(:disabled) { background: #253149; border-color: #38bdf8; }
+        .pag-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; font-weight: 600; }
+        .pag-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .pag-ellipsis { color: #64748b; padding: 6px 4px; }
+
+        /* Loading / Error / Empty */
+        .loading { text-align: center; padding: 60px; color: #64748b; }
+        .spinner { width: 40px; height: 40px; border: 3px solid #334155; border-top-color: #38bdf8; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        .error-box { background: rgba(239,68,68,0.1); border: 1px solid #ef4444; border-radius: 8px; padding: 16px 20px; color: #fca5a5; margin: 20px 40px; }
+        .empty-state { text-align: center; padding: 60px; color: #64748b; }
+        .empty-state h3 { font-size: 18px; color: #94a3b8; margin-bottom: 8px; }
 
-        /* Error */
-        .error-box {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid #ef4444;
-            border-radius: 8px;
-            padding: 16px 20px;
-            color: #fca5a5;
-            margin: 20px 40px;
-        }
+        /* Dashboard */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; padding: 24px 40px 40px; }
+        @media (max-width: 1100px) { .dashboard-grid { grid-template-columns: 1fr; } }
+        .chart-card { background: linear-gradient(180deg, #1e293b 0%, #1a2438 100%); border: 1px solid rgba(148,163,184,0.12); border-radius: 14px; padding: 24px; min-width: 0; box-shadow: 0 4px 16px rgba(0,0,0,0.25), 0 1px 0 rgba(255,255,255,0.03) inset; transition: border-color 0.2s, transform 0.2s; }
+        .chart-card:hover { border-color: rgba(148,163,184,0.22); }
+        .chart-card h3 { font-size: 13px; font-weight: 600; color: #cbd5e1; margin-bottom: 20px; letter-spacing: 0.3px; text-transform: none; }
+        .chart-card.full-width { grid-column: 1 / -1; }
+        .chart-loading { text-align: center; padding: 60px; color: #64748b; }
+        .chart-wrap { position: relative; height: 340px; width: 100%; }
+        .chart-card.full-width .chart-wrap { height: 320px; }
+        .mui-chart { width: 100%; height: 100%; min-height: 320px; position: relative; }
+        .mui-chart svg { max-width: 100%; overflow: visible !important; }
+        .mui-chart svg .MuiBarLabel-root { overflow: visible; }
+        .dash-section-header { grid-column: 1 / -1; padding: 24px 4px 12px; color: #38bdf8; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; border-bottom: 1px solid #334155; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+        .dash-section-header:first-child { padding-top: 4px; }
+        .dash-section-header .section-sub { color: #94a3b8; font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 12px; }
+        .heatmap-wrap { width: 100%; overflow-x: auto; padding: 8px 0; }
+        .heatmap-table { border-collapse: separate; border-spacing: 2px; font-size: 11px; min-width: 100%; }
+        .heatmap-table th { color: #94a3b8; font-weight: 500; padding: 4px 6px; text-align: center; white-space: nowrap; font-size: 10px; }
+        .heatmap-table td.row-label { color: #cbd5e1; padding: 4px 10px 4px 0; text-align: right; font-weight: 500; white-space: nowrap; }
+        .heatmap-cell { width: 50px; height: 28px; border-radius: 4px; text-align: center; color: #0f172a; font-weight: 600; font-size: 10px; cursor: default; }
+        .heatmap-cell.empty { background: #1a2538; color: #475569; }
+        .heatmap-legend { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #94a3b8; margin-top: 12px; padding: 0 4px; }
+        .heatmap-gradient { flex: 1; max-width: 200px; height: 12px; border-radius: 3px; background: linear-gradient(90deg, #1a2538, #34d399); }
 
-        /* Empty state */
-        .empty-state {
-            text-align: center;
-            padding: 60px;
-            color: #64748b;
-        }
-        .empty-state h3 {
-            font-size: 18px;
-            color: #94a3b8;
-            margin-bottom: 8px;
-        }
+        /* Expand button on each chart card */
+        .chart-card { position: relative; }
+        .expand-btn { position: absolute; top: 16px; right: 16px; background: none; border: 1px solid #334155; color: #64748b; cursor: pointer; padding: 4px 8px; font-size: 14px; border-radius: 6px; line-height: 1; transition: color 0.15s, background 0.15s, border-color 0.15s; z-index: 1; }
+        .expand-btn:hover { color: #38bdf8; background: rgba(56,189,248,0.1); border-color: #38bdf8; }
 
-        /* Scrollable table wrapper */
-        .table-wrap {
-            overflow-x: auto;
-        }
+        /* Chart modal (lightbox) */
+        .chart-modal { display: none; position: fixed; inset: 0; background: rgba(7, 12, 24, 0.88); backdrop-filter: blur(2px); z-index: 9999; align-items: center; justify-content: center; padding: 24px; }
+        .chart-modal.open { display: flex; }
+        .chart-modal-inner { background: #1e293b; border: 1px solid #334155; border-radius: 14px; max-width: 1500px; width: 100%; max-height: 92vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,0.5); }
+        .chart-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid #334155; }
+        .chart-modal-header h3 { color: #f8fafc; font-size: 18px; font-weight: 600; }
+        .chart-modal-close { background: none; border: none; color: #94a3b8; font-size: 32px; cursor: pointer; line-height: 1; padding: 0 8px; }
+        .chart-modal-close:hover { color: #f8fafc; }
+        .chart-modal-body { padding: 24px; flex: 1; min-height: 0; overflow: auto; }
+        .chart-modal-body .chart-wrap { height: 70vh; }
+        .chart-modal-body .heatmap-table { font-size: 13px; }
+        .chart-modal-body .heatmap-cell { width: 70px; height: 38px; font-size: 12px; }
+        .dash-kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; padding: 24px 40px 0; }
 
-        /* Export bar */
-        .export-bar {
-            padding: 0 40px 16px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-        }
+        /* Staff tab badge */
+        .staff-badge { display: inline-block; background: rgba(251,113,133,0.15); color: #fb7185; border: 1px solid rgba(251,113,133,0.3); border-radius: 20px; font-size: 11px; font-weight: 600; padding: 2px 10px; margin-left: 8px; vertical-align: middle; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div>
-        <h1><span>Aroya</span> Guest Multi-Itinerary Finder</h1>
-        <div class="header-sub">Identify guests booked across multiple cruise packages</div>
+    <div class="header-left">
+        <img src="/static/CRUISE_SAUDI_LOGO_REVERSE_2_B.png" alt="Cruise Saudi" class="header-logo">
+        <div>
+            <h1><span>Aroya</span> Repeat Guests Insights</h1>
+            <div class="header-sub">Guests booked on more than one cruise package</div>
+        </div>
     </div>
     <div class="header-sub" id="lastUpdated"></div>
 </div>
 
-<div class="stats-row" id="statsRow">
-    <div class="stat-card"><div class="stat-value" id="statTotal">--</div><div class="stat-label">Total Guests</div></div>
-    <div class="stat-card"><div class="stat-value" id="statPackages">--</div><div class="stat-label">Packages</div></div>
-    <div class="stat-card highlight"><div class="stat-value" id="statGroups">--</div><div class="stat-label">Duplicate Groups</div></div>
-    <div class="stat-card highlight"><div class="stat-value" id="statDupGuests">--</div><div class="stat-label">Bookings in Duplicates</div></div>
-    <div class="stat-card green"><div class="stat-value" id="statRevenue">--</div><div class="stat-label">Revenue (Duplicates)</div></div>
+<!-- Tab Navigation -->
+<div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('duplicates', this)">Repeat Guests</button>
+    <button class="tab-btn" onclick="switchTab('staff', this)">Cruise Saudi Personnel</button>
+    <button class="tab-btn" onclick="switchTab('dashboard', this)">Dashboard</button>
 </div>
 
-<div class="controls">
-    <input type="text" id="searchInput" placeholder="Search by name, email, package, phone..." />
-    <select id="filterPackage">
-        <option value="">All Packages</option>
-    </select>
-    <button class="btn" onclick="loadData()">Refresh</button>
+<!-- ═══════════════════════════════════════════════════════ TAB: Multi-Itinerary -->
+<div id="tab-duplicates" class="tab-pane active">
+    <div class="stats-row">
+        <div class="stat-card" title="Every unique passenger ever recorded in the system — the full customer base, not just loyal/repeat ones.">
+            <div class="stat-value" id="statTotal">--</div>
+            <div class="stat-label">All-Time Unique Guests</div>
+        </div>
+        <div class="stat-card" title="Distinct cruise package types we sell (e.g., BODATH-7, BODKUS-7).">
+            <div class="stat-value" id="statPackages">--</div>
+            <div class="stat-label">Cruise Packages</div>
+        </div>
+        <div class="stat-card highlight" title="Guests who have booked 2 or more different cruise packages — our loyalty pool.">
+            <div class="stat-value" id="statGroups">--</div>
+            <div class="stat-label">Repeat Guests</div>
+        </div>
+        <div class="stat-card highlight" title="Total booking records made by repeat guests (every individual reservation/sailing record for the loyalty pool).">
+            <div class="stat-value" id="statDupGuests">--</div>
+            <div class="stat-label">Bookings by Repeat Guests</div>
+        </div>
+        <div class="stat-card green" title="Sum of reservation revenue from all repeat guests in this view (uses Res Rev definition).">
+            <div class="stat-value" id="statRevenue">--</div>
+            <div class="stat-label">Repeat-Guest Revenue (SAR)</div>
+        </div>
+        <div class="stat-card green" title="Average Lifetime Value — Repeat-Guest Revenue ÷ Repeat Guests. The typical revenue contribution per repeat guest.">
+            <div class="stat-value" id="statAvgLTV">--</div>
+            <div class="stat-label">Avg Lifetime Value / Guest</div>
+        </div>
+        <div class="stat-card" style="background: rgba(250,204,21,0.12); border-color: rgba(250,204,21,0.3);" title="Repeat guests with a Loyalty Score of 70 or higher — top-tier loyalty pool, prime targets for VIP outreach and retention campaigns.">
+            <div class="stat-value" id="statHighValue" style="color: #facc15;">--</div>
+            <div class="stat-label">High-Value Guests (Score ≥ 70)</div>
+        </div>
+    </div>
+    <div class="controls">
+        <input type="text" id="searchInput" placeholder="Search by name, email, package, phone..." />
+        <select id="mainSortBy" onchange="applyFilters()" title="Sort guests by">
+            <option value="res_rev" selected>Sort: Reservation Revenue</option>
+            <option value="score">Sort: Score</option>
+            <option value="cabin_rev">Sort: Cabin Revenue</option>
+            <option value="pax_rev">Sort: Pax Revenue</option>
+            <option value="bookings">Sort: Bookings</option>
+        </select>
+        <button type="button" id="mainSortDirBtn" class="btn" onclick="toggleMainSortDir()" title="Toggle sort direction">↓ Desc</button>
+        <select id="mainPageSize" onchange="onMainPageSizeChange()" title="Guests per page">
+            <option value="10">10 / page</option>
+            <option value="25" selected>25 / page</option>
+            <option value="50">50 / page</option>
+            <option value="100">100 / page</option>
+            <option value="9999">All</option>
+        </select>
+        <button class="btn" onclick="loadData()">Refresh</button>
+    </div>
+    <div class="filters">
+        <span class="filters-label">Filters:</span>
+        <select id="filterPackage"><option value="">All Packages</option></select>
+        <select id="filterGeog"><option value="">All Sailing Areas</option></select>
+        <select id="filterComments"><option value="">All Itineraries</option></select>
+        <select id="filterRegion"><option value="">All Regions</option></select>
+        <select id="filterCountry"><option value="">All Countries</option></select>
+        <select id="filterState"><option value="">All States</option></select>
+        <select id="filterBookingType">
+            <option value="">All Booking Types</option>
+            <option value="Direct">Direct</option>
+            <option value="Indirect">Indirect</option>
+        </select>
+        <select id="filterGuestType">
+            <option value="">All Guest Types</option>
+            <option value="Paid Guests">Paid Guests</option>
+            <option value="Special Guests">Special Guests</option>
+        </select>
+        <input type="number" id="mainRevMin" placeholder="Min reservation revenue" class="rev-input" min="0" step="100" />
+        <input type="number" id="mainRevMax" placeholder="Max reservation revenue" class="rev-input" min="0" step="100" />
+        <label class="filter-toggle" title="Hide Direct + internal/agency emails — hides repeat-guest groups whose email is on the trade/internal/partner domain allowlist AND has at least one Direct booking. Applies to the list and the CSV export.">
+            <input type="checkbox" id="hideInternalDirect" checked onchange="applyFilters()" />
+        </label>
+        <button class="btn-reset-filters" onclick="resetMainFilters()" title="Clear all filters">✕ Reset</button>
+    </div>
+    <div class="export-bar">
+        <button class="btn btn-outline" onclick="exportCSV()">Export CSV</button>
+    </div>
+    <div class="content"><div class="pagination" id="mainPaginationTop"></div></div>
+    <div class="content" id="mainContent">
+        <div class="loading"><div class="spinner"></div>Loading guest data from database...</div>
+    </div>
+    <div class="content"><div class="pagination" id="mainPagination"></div></div>
 </div>
 
-<div class="export-bar">
-    <button class="btn btn-outline" onclick="exportCSV()">Export CSV</button>
-</div>
+<!-- ═══════════════════════════════════════════════════════ TAB: Dashboard -->
+<div id="tab-dashboard" class="tab-pane">
+    <div style="padding: 20px 40px 0; color: #94a3b8; font-size: 13px;">All metrics below reflect <strong style="color:#38bdf8;">repeat guests only</strong> — guests who booked more than one cruise package.</div>
+    <div class="dash-kpi-row">
+        <div class="stat-card" style="background: rgba(250,204,21,0.12); border-color: rgba(250,204,21,0.3);" title="Mean Loyalty Score across all repeat guests (0–100 scale). Single-number indicator of how strong the loyalty pool is overall.">
+            <div class="stat-value" id="dashAvgScore" style="color: #facc15;">--</div>
+            <div class="stat-label">Avg Loyalty Score</div>
+        </div>
+        <div class="stat-card green" title="Repeat guests with at least one sailing whose SAIL_DATE_FROM falls within the last 12 months. Separates the live, engaged loyalty pool from dormant guests.">
+            <div class="stat-value" id="dashActiveGuests">--</div>
+            <div class="stat-label">Active Repeat Guests (12mo)</div>
+        </div>
+        <div class="stat-card" title="Future bookings made by repeat guests — reservations whose SAIL_DATE_FROM is after today. Forward-looking demand signal.">
+            <div class="stat-value" id="dashFuturePipeline">--</div>
+            <div class="stat-label">Future Pipeline (Bookings)</div>
+        </div>
+    </div>
+    <div class="controls" style="padding: 16px 40px 0;">
+        <select id="dashFilterPackage" onchange="applyDashFilter()"><option value="">All Packages</option></select>
+        <button class="btn btn-outline" onclick="applyDashFilter()">Apply</button>
+        <button class="btn-reset-filters" onclick="resetDashFilters()" title="Clear dashboard filters">✕ Reset</button>
+    </div>
+    <div class="dashboard-grid">
+        <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+        <!-- TIER 1: Strategic trend & deep revenue insight -->
+        <div class="dash-section-header">Performance Trends<span class="section-sub">When are repeat guests sailing — and how is volume moving?</span></div>
+        <div class="chart-card full-width"><h3>Repeat Bookings by Sail Month</h3><div class="chart-wrap"><div class="mui-chart" id="chart-monthly"></div></div></div>
+        <div class="chart-card full-width">
+            <h3>Revenue Heatmap — Cabin Category × Sail Month</h3>
+            <div class="heatmap-wrap" id="chart-cabin-month-heatmap"></div>
+        </div>
 
-<div class="content" id="mainContent">
-    <div class="loading">
-        <div class="spinner"></div>
-        Loading guest data from database...
+        <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+        <!-- TIER 1B: Geography & channel mix -->
+        <div class="dash-section-header">Geography &amp; Channel Mix<span class="section-sub">Where guests come from, where they sail, and how they book</span></div>
+        <div class="chart-card"><h3>Bookings by Region</h3><div class="chart-wrap"><div class="mui-chart" id="chart-region-bookings"></div></div></div>
+        <div class="chart-card"><h3>Revenue by Region</h3><div class="chart-wrap"><div class="mui-chart" id="chart-region-rev"></div></div></div>
+        <div class="chart-card"><h3>Bookings by Sailing Area</h3><div class="chart-wrap"><div class="mui-chart" id="chart-sailarea-bookings"></div></div></div>
+        <div class="chart-card"><h3>Direct vs Indirect Bookings</h3><div class="chart-wrap"><div class="mui-chart" id="chart-booking-type"></div></div></div>
+
+        <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+        <!-- TIER 1C: Loyalty & engagement depth -->
+        <div class="dash-section-header">Loyalty Depth<span class="section-sub">How loyal are our repeat guests, and how often do they sail with us</span></div>
+        <div class="chart-card"><h3>Loyalty Score Distribution</h3><div class="chart-wrap"><div class="mui-chart" id="chart-score-dist"></div></div></div>
+        <div class="chart-card"><h3>Reservations per Repeat Guest</h3><div class="chart-wrap"><div class="mui-chart" id="chart-sailings-per-guest"></div></div></div>
+        <div class="chart-card full-width"><h3>Top 10 Itineraries by Bookings</h3><div class="chart-wrap"><div class="mui-chart" id="chart-itineraries"></div></div></div>
+
+        <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+        <!-- TIER 2: Revenue mix — where the money comes from -->
+        <div class="dash-section-header">Revenue Mix<span class="section-sub">Which packages and cabin categories drive top-line revenue</span></div>
+        <div class="chart-card"><h3>Revenue Share by Package</h3><div class="chart-wrap"><div class="mui-chart" id="chart-rev-pie"></div></div></div>
+        <div class="chart-card"><h3>Revenue by Cabin Category</h3><div class="chart-wrap"><div class="mui-chart" id="chart-cabin-rev"></div></div></div>
+
+        <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+        <!-- TIER 3: Sales channel & pricing power -->
+        <div class="dash-section-header">Sales Channels &amp; Pricing<span class="section-sub">Who brings the business, and how strong is per-booking pricing</span></div>
+        <div class="chart-card"><h3>Top 10 Travel Agencies (by Reservation)</h3><div class="chart-wrap"><div class="mui-chart" id="chart-operators"></div></div></div>
+        <div class="chart-card"><h3>Average Revenue per Booking (by Package)</h3><div class="chart-wrap"><div class="mui-chart" id="chart-avg-rev"></div></div></div>
+
+        <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+        <!-- TIER 4: Product activity & cross-sell behavior -->
+        <div class="dash-section-header">Product Activity<span class="section-sub">Which packages sell, and which sell together</span></div>
+        <div class="chart-card"><h3>Repeat Bookings by Package</h3><div class="chart-wrap"><div class="mui-chart" id="chart-pkg-bar"></div></div></div>
+        <div class="chart-card"><h3>Most Common Package Pairs</h3><div class="chart-wrap"><div class="mui-chart" id="chart-combos"></div></div></div>
+
+        <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+        <!-- TIER 5: Guest profile -->
+        <div class="dash-section-header">Guest Demographics<span class="section-sub">Who our repeat guests are — for marketing &amp; service planning</span></div>
+        <div class="chart-card"><h3>Top 10 Guest Nationalities</h3><div class="chart-wrap"><div class="mui-chart" id="chart-nat-bar"></div></div></div>
+        <div class="chart-card"><h3>Guest Languages</h3><div class="chart-wrap"><div class="mui-chart" id="chart-lang"></div></div></div>
+        <div class="chart-card full-width"><h3>Repeat Guest Age Distribution</h3><div class="chart-wrap"><div class="mui-chart" id="chart-age"></div></div></div>
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════ TAB: Cruise Saudi Staff -->
+<div id="tab-staff" class="tab-pane">
+    <div class="stats-row">
+        <div class="stat-card highlight" title="Cruise Saudi employees + consultants (e.g., Deloitte) who have booked 2 or more cruise packages. Detected via known internal email patterns (@socialclinic, @deloitte, cruisesaudi-consultant) and the employee name list.">
+            <div class="stat-value" id="staffGroups">--</div>
+            <div class="stat-label">Repeat Personnel / Consultants</div>
+        </div>
+        <div class="stat-card highlight" title="Total booking records made by Cruise Saudi personnel and consultants.">
+            <div class="stat-value" id="staffBookings">--</div>
+            <div class="stat-label">Bookings by Personnel</div>
+        </div>
+        <div class="stat-card green" title="Sum of reservation revenue from Cruise Saudi personnel and consultants.">
+            <div class="stat-value" id="staffRevenue">--</div>
+            <div class="stat-label">Personnel Revenue (SAR)</div>
+        </div>
+        <div class="stat-card" title="Bookings ÷ Personnel — average number of reservation records per staff/consultant. Indicates how often the typical personnel member sails.">
+            <div class="stat-value" id="staffAvgBookings">--</div>
+            <div class="stat-label">Avg Bookings per Personnel</div>
+        </div>
+        <div class="stat-card" title="Personnel Revenue ÷ Total Repeat-Guest Revenue. Shows how much of the loyalty-pool revenue is internal (staff/consultants) versus paying customers.">
+            <div class="stat-value" id="staffRevenueShare">--</div>
+            <div class="stat-label">% of Repeat-Guest Revenue</div>
+        </div>
+    </div>
+    <div class="controls">
+        <input type="text" id="staffSearch" placeholder="Search staff by name, email, package..." />
+        <select id="staffSortBy" onchange="renderStaff()" title="Sort staff by">
+            <option value="res_rev" selected>Sort: Reservation Revenue</option>
+            <option value="score">Sort: Score</option>
+            <option value="cabin_rev">Sort: Cabin Revenue</option>
+            <option value="pax_rev">Sort: Pax Revenue</option>
+            <option value="bookings">Sort: Bookings</option>
+        </select>
+        <button type="button" id="staffSortDirBtn" class="btn" onclick="toggleStaffSortDir()" title="Toggle sort direction">↓ Desc</button>
+        <select id="staffPageSize" onchange="onStaffPageSizeChange()" title="Staff per page">
+            <option value="10">10 / page</option>
+            <option value="25" selected>25 / page</option>
+            <option value="50">50 / page</option>
+            <option value="100">100 / page</option>
+            <option value="9999">All</option>
+        </select>
+    </div>
+    <div class="filters">
+        <span class="filters-label">Filters:</span>
+        <select id="staffFilterPackage"><option value="">All Packages</option></select>
+        <select id="staffFilterGeog"><option value="">All Sailing Areas</option></select>
+        <select id="staffFilterComments"><option value="">All Itineraries</option></select>
+        <select id="staffFilterRegion"><option value="">All Regions</option></select>
+        <select id="staffFilterCountry"><option value="">All Countries</option></select>
+        <select id="staffFilterState"><option value="">All States</option></select>
+        <select id="staffFilterBookingType">
+            <option value="">All Booking Types</option>
+            <option value="Direct">Direct</option>
+            <option value="Indirect">Indirect</option>
+        </select>
+        <select id="staffFilterGuestType">
+            <option value="">All Guest Types</option>
+            <option value="Paid Guests">Paid Guests</option>
+            <option value="Special Guests">Special Guests</option>
+        </select>
+        <input type="number" id="staffRevMin" placeholder="Min reservation revenue" class="rev-input" min="0" step="100" />
+        <input type="number" id="staffRevMax" placeholder="Max reservation revenue" class="rev-input" min="0" step="100" />
+        <button class="btn-reset-filters" onclick="resetStaffFilters()" title="Clear all filters">✕ Reset</button>
+    </div>
+    <div class="export-bar">
+        <button class="btn btn-outline" onclick="exportStaffCSV()">Export CSV</button>
+    </div>
+    <div class="content"><div class="pagination" id="staffPaginationTop"></div></div>
+    <div class="content" id="staffContent">
+        <div class="loading"><div class="spinner"></div>Loading...</div>
+    </div>
+    <div class="content"><div class="pagination" id="staffPagination"></div></div>
+</div>
+
+<!-- Expanded-chart modal -->
+<div id="chartModal" class="chart-modal" onclick="closeChartModal(event)">
+    <div class="chart-modal-inner" onclick="event.stopPropagation()">
+        <div class="chart-modal-header">
+            <h3 id="chartModalTitle"></h3>
+            <button class="chart-modal-close" onclick="closeChartModal(null, true)" title="Close (Esc)">&times;</button>
+        </div>
+        <div class="chart-modal-body" id="chartModalBody"></div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ Shared Scripts -->
 <script>
-let allDuplicates = [];
+let allDuplicates = [];          // all repeat-guest groups (raw from server)
 let allStats = {};
+let dashboardRendered = false;
+let mainPage = 1;
+let staffPage = 1;
+window._pendingDashRender = false;
 
-async function loadData() {
-    const content = document.getElementById('mainContent');
-    content.innerHTML = '<div class="loading"><div class="spinner"></div>Loading guest data from database...</div>';
+// ── Pagination helpers ─────────────────────────────────────────────
+function getPageSize(selectId) {
+    const v = parseInt(document.getElementById(selectId)?.value, 10);
+    return v && v > 0 ? v : 25;
+}
 
+function renderPagination(elemId, page, totalPages, total, pageSize, handlerName) {
+    const el = document.getElementById(elemId);
+    if (!el) return;
+    if (total === 0) { el.innerHTML = ''; return; }
+    if (totalPages <= 1) {
+        el.innerHTML = `<div class="pag-info">${total} guest${total === 1 ? '' : 's'}</div>`;
+        return;
+    }
+    const from = (page - 1) * pageSize + 1;
+    const to = Math.min(page * pageSize, total);
+    let html = `<div class="pag-info">Showing <strong>${from}–${to}</strong> of <strong>${total.toLocaleString()}</strong></div><div class="pag-controls">`;
+    html += `<button class="pag-btn" ${page === 1 ? 'disabled' : ''} onclick="${handlerName}(1)">«</button>`;
+    html += `<button class="pag-btn" ${page === 1 ? 'disabled' : ''} onclick="${handlerName}(${page - 1})">‹</button>`;
+    const nums = [];
+    if (totalPages <= 7) {
+        for (let i = 1; i <= totalPages; i++) nums.push(i);
+    } else {
+        nums.push(1);
+        if (page > 4) nums.push('…');
+        const s = Math.max(2, page - 1), e = Math.min(totalPages - 1, page + 1);
+        for (let i = s; i <= e; i++) nums.push(i);
+        if (page < totalPages - 3) nums.push('…');
+        nums.push(totalPages);
+    }
+    nums.forEach(n => {
+        if (n === '…') html += '<span class="pag-ellipsis">…</span>';
+        else html += `<button class="pag-btn ${n === page ? 'active' : ''}" onclick="${handlerName}(${n})">${n}</button>`;
+    });
+    html += `<button class="pag-btn" ${page === totalPages ? 'disabled' : ''} onclick="${handlerName}(${page + 1})">›</button>`;
+    html += `<button class="pag-btn" ${page === totalPages ? 'disabled' : ''} onclick="${handlerName}(${totalPages})">»</button>`;
+    html += '</div>';
+    el.innerHTML = html;
+}
+
+function goToMainPage(p) { mainPage = p; applyFilters(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function goToStaffPage(p) { staffPage = p; renderStaff(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function onMainPageSizeChange() { mainPage = 1; applyFilters(); }
+function onStaffPageSizeChange() { staffPage = 1; renderStaff(); }
+
+// ── Cruise Saudi staff classification (by name + email match) ──────
+const staffNameSet = new Set();       // keys: "first|last" lowercased
+const staffNameToEmail = new Map();   // "first|last" -> staff email (lowercased)
+const staffEmails = new Set();        // all known staff emails (lowercased)
+
+function normalizeName(s) {
+    return (s || '')
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z\s]/gi, ' ')
+        .trim()
+        .replace(/\s+/g, ' ')
+        .toLowerCase();
+}
+
+async function loadStaffNames() {
     try {
-        const [dupRes, statsRes] = await Promise.all([
-            fetch('/api/duplicates'),
-            fetch('/api/stats')
-        ]);
-
-        if (!dupRes.ok) throw new Error('Failed to fetch duplicates');
-        if (!statsRes.ok) throw new Error('Failed to fetch stats');
-
-        const dupData = await dupRes.json();
-        const statsData = await statsRes.json();
-
-        if (dupData.error) throw new Error(dupData.error);
-        if (statsData.error) throw new Error(statsData.error);
-
-        allDuplicates = dupData.duplicates;
-        allStats = statsData;
-
-        document.getElementById('statTotal').textContent = statsData.total_guests.toLocaleString();
-        document.getElementById('statPackages').textContent = statsData.total_packages;
-        document.getElementById('statGroups').textContent = statsData.duplicate_groups;
-        document.getElementById('statDupGuests').textContent = statsData.guests_in_duplicates;
-        document.getElementById('statRevenue').textContent = statsData.revenue_from_duplicates.toLocaleString();
-        document.getElementById('lastUpdated').textContent = 'Updated: ' + new Date().toLocaleString();
-
-        // Populate package filter
-        const pkgSet = new Set();
-        allDuplicates.forEach(d => d.packages.forEach(p => pkgSet.add(p)));
-        const pkgSelect = document.getElementById('filterPackage');
-        pkgSelect.innerHTML = '<option value="">All Packages</option>';
-        [...pkgSet].sort().forEach(p => {
-            pkgSelect.innerHTML += `<option value="${p}">${p}</option>`;
+        const res = await fetch('/static/EmployeeList.txt');
+        if (!res.ok) return;
+        const text = await res.text();
+        text.split(/\r?\n/).forEach(line => {
+            // Tab-separated: "<name>\t<email>". Some rows may be name-only.
+            const cols = line.split(/\t+/).map(c => c.trim()).filter(c => c.length);
+            if (!cols.length) return;
+            const rawName = cols[0];
+            const rawEmail = cols[1] || '';
+            const norm = normalizeName(rawName);
+            if (!norm || norm === 'employee name') return;
+            const parts = norm.split(/\s+/).filter(p => p);
+            if (parts.length < 2) return;
+            const key = parts[0] + '|' + parts[parts.length - 1];
+            const email = rawEmail.toLowerCase();
+            staffNameSet.add(key);
+            if (email) {
+                staffNameToEmail.set(key, email);
+                staffEmails.add(email);
+            }
         });
-
-        renderDuplicates(allDuplicates);
-    } catch (err) {
-        content.innerHTML = '';
-        document.getElementById('mainContent').insertAdjacentHTML('beforebegin',
-            `<div class="error-box">Error: ${err.message}</div>`);
+    } catch (e) {
+        console.error('Failed to load staff list:', e);
     }
 }
 
-function renderDuplicates(dups) {
-    const content = document.getElementById('mainContent');
+function isStaff(dup) {
+    if (!dup.guests || !dup.guests.length) return false;
 
-    if (dups.length === 0) {
-        content.innerHTML = '<div class="empty-state"><h3>No Duplicates Found</h3><p>No guests matched across multiple packages with the current filters.</p></div>';
-        return;
+    // 1. Email-based: known personnel/consultant email patterns
+    const email = (dup.email || '').toLowerCase();
+    const STAFF_EMAIL_PATTERNS = ['@socialclinic', '@deloitte', 'cruisesaudi-consultant'];
+    if (STAFF_EMAIL_PATTERNS.some(p => email.includes(p))) return true;
+
+    // 2. List-based: each EmployeeList row gives a (name, email) pair. A guest is
+    // staff only when BOTH their name AND the matching list entry's email line up
+    // with the guest record. Checked across every guest in the group, trying both
+    // FIRST/LAST and FULL_NAME orderings since Oracle isn't consistent.
+    if (!staffNameSet.size) return false;
+    const matchesNameAndEmail = (key, gEmail) => {
+        if (!staffNameSet.has(key)) return false;
+        const listEmail = staffNameToEmail.get(key);
+        // If the list row had no email column, a name-only match still counts.
+        if (!listEmail) return true;
+        return !!gEmail && gEmail === listEmail;
+    };
+    for (const g of dup.guests) {
+        const gEmail = (g.EMAIL || '').trim().toLowerCase();
+
+        // Exact email hit against any known staff email — definitive.
+        if (gEmail && staffEmails.has(gEmail)) return true;
+
+        const fnParts = normalizeName(g.FIRST_NAME || '').split(/\s+/).filter(p => p);
+        const lnParts = normalizeName(g.LAST_NAME || '').split(/\s+/).filter(p => p);
+        if (fnParts.length && lnParts.length) {
+            const first = fnParts[0], last = lnParts[lnParts.length - 1];
+            if (matchesNameAndEmail(first + '|' + last, gEmail)) return true;
+            if (matchesNameAndEmail(last + '|' + first, gEmail)) return true;
+        }
+        const fullParts = normalizeName(g.FULL_NAME || '').split(/\s+/).filter(p => p);
+        if (fullParts.length >= 2) {
+            const a = fullParts[0], b = fullParts[fullParts.length - 1];
+            if (matchesNameAndEmail(a + '|' + b, gEmail)) return true;
+            if (matchesNameAndEmail(b + '|' + a, gEmail)) return true;
+        }
+    }
+    return false;
+}
+
+function getNonStaffDups() { return allDuplicates.filter(d => !isStaff(d)); }
+function getStaffDups()    { return allDuplicates.filter(d =>  isStaff(d)); }
+
+// ── Cabin number → category mapping ────────────────────────────────
+const cabinCategoryMap = new Map();
+
+async function loadCabinCategories() {
+    try {
+        const res = await fetch('/static/CabinCategory.csv');
+        if (!res.ok) return;
+        const text = await res.text();
+        text.split(/\r?\n/).forEach((line, idx) => {
+            if (idx === 0 || !line.trim()) return; // skip header / blank
+            const [num, cat] = line.split(',');
+            if (!num || !cat) return;
+            cabinCategoryMap.set(num.trim(), cat.trim());
+        });
+    } catch (e) {
+        console.error('Failed to load cabin categories:', e);
+    }
+}
+
+function cabinCategoryFor(cabin) {
+    if (cabin == null) return null;
+    return cabinCategoryMap.get(String(cabin).trim()) || null;
+}
+
+// ── Tab switching ──────────────────────────────────────────────────
+function switchTab(tab, btn) {
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    btn.classList.add('active');
+
+    if (tab === 'dashboard' && allDuplicates.length && !dashboardRendered) {
+        dashboardRendered = true;
+        renderDashboard();
+    }
+    if (tab === 'dashboard') {
+        setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 50);
+    }
+    if (tab === 'staff') renderStaff();
+}
+
+// ── Data load ──────────────────────────────────────────────────────
+async function loadData() {
+    setContent('mainContent', '<div class="loading"><div class="spinner"></div>Loading guest data from database...</div>');
+    dashboardRendered = false;
+
+    // Load reference data once (staff names + cabin categories)
+    if (!staffNameSet.size) await loadStaffNames();
+    if (!cabinCategoryMap.size) await loadCabinCategories();
+
+    // Poll cache-status until ready, then fetch data
+    for (let attempt = 0; attempt < 60; attempt++) {
+        const statusRes = await fetch('/api/cache-status');
+        const statusData = await statusRes.json();
+        if (statusData.status === 'error') {
+            setContent('mainContent', `<div class="error-box">Database error: ${esc(statusData.error)}</div>`);
+            return;
+        }
+        if (statusData.status === 'pending') {
+            const elapsed = attempt * 3;
+            setContent('mainContent', `<div class="loading"><div class="spinner"></div>Loading from database… (${elapsed}s elapsed)</div>`);
+            await new Promise(r => setTimeout(r, 3000));
+            continue;
+        }
+        break; // status === 'ok'
     }
 
+    try {
+        const [dupRes, statsRes] = await Promise.all([fetch('/api/duplicates'), fetch('/api/stats')]);
+        if (!dupRes.ok || !statsRes.ok) throw new Error('Failed to fetch data');
+
+        const dupData = await dupRes.json();
+        const statsData = await statsRes.json();
+        if (dupData.error) throw new Error(dupData.error);
+        if (statsData.error) throw new Error(statsData.error);
+
+        allDuplicates = (dupData.duplicates || [])
+            .filter(d => !(d.email || '').toLowerCase().includes('@example'))
+            .sort((a, b) => (b.guest_total_spent || 0) - (a.guest_total_spent || 0));
+        window._allDuplicates = allDuplicates;
+        allStats = statsData;
+
+        // KPIs on the main tab reflect non-staff repeat guests only
+        const nonStaff = getNonStaffDups();
+        const nonStaffBookings = nonStaff.reduce((s, d) => s + d.booking_count, 0);
+        const nonStaffRevenue = nonStaff.reduce((s, d) => s + (d.guest_total_spent || 0), 0);
+
+        const totalGuestsValue = statsData.total_unique_guests ?? statsData.total_guests ?? 0;
+        document.getElementById('statTotal').textContent = totalGuestsValue.toLocaleString();
+        document.getElementById('statPackages').textContent = statsData.total_packages ?? '--';
+        document.getElementById('statGroups').textContent = nonStaff.length.toLocaleString();
+        document.getElementById('statDupGuests').textContent = nonStaffBookings.toLocaleString();
+        document.getElementById('statRevenue').textContent = Math.round(nonStaffRevenue).toLocaleString();
+        const avgLTV = nonStaff.length > 0 ? Math.round(nonStaffRevenue / nonStaff.length) : 0;
+        document.getElementById('statAvgLTV').textContent = avgLTV.toLocaleString();
+        const highValueCount = nonStaff.filter(d => calculateScore(d).score >= 70).length;
+        document.getElementById('statHighValue').textContent = highValueCount.toLocaleString();
+        if (statsData.last_updated) {
+            document.getElementById('lastUpdated').textContent = 'Cache: ' + new Date(statsData.last_updated).toLocaleString();
+        }
+
+        const pkgSet = new Set();
+        allDuplicates.forEach(d => d.packages.forEach(p => pkgSet.add(p)));
+        const filterablePkgs = [...pkgSet].sort();
+        ['filterPackage', 'staffFilterPackage', 'dashFilterPackage'].forEach(id => {
+            const sel = document.getElementById(id);
+            sel.innerHTML = '<option value="">All Packages</option>';
+            filterablePkgs.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
+        });
+
+        const geogSet = new Set();
+        const commentsSet = new Set();
+        const countrySet = new Set();
+        const stateSet = new Set();
+        const regionSet = new Set();
+        window._countryToStates = {};
+        window._regionToCountries = {};
+        window._allCountries = new Set();
+        allDuplicates.forEach(d => d.guests.forEach(g => {
+            const gv = (g.GEOG_AREA_CODE || '').trim();
+            if (gv) geogSet.add(gv);
+            const cv = (g.COMMENTS || '').trim();
+            if (cv) commentsSet.add(cv);
+            const co = (g.AGENCY_COUNTRY_CODE || '').trim();
+            const st = (g.AGENCY_STATE_CODE || '').trim();
+            if (co) {
+                countrySet.add(co);
+                window._allCountries.add(co);
+            }
+            if (st) stateSet.add(st);
+            if (co) {
+                if (!window._countryToStates[co]) window._countryToStates[co] = new Set();
+                if (st) window._countryToStates[co].add(st);
+                const reg = regionFor(co);
+                if (reg) {
+                    regionSet.add(reg);
+                    if (!window._regionToCountries[reg]) window._regionToCountries[reg] = new Set();
+                    window._regionToCountries[reg].add(co);
+                }
+            }
+        }));
+        const populateSel = (id, placeholder, values) => {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            sel.innerHTML = `<option value="">${placeholder}</option>`;
+            [...values].sort().forEach(v => sel.innerHTML += `<option value="${esc(v)}">${esc(v)}</option>`);
+        };
+        populateSel('filterGeog', 'All Sailing Areas', geogSet);
+        populateSel('filterComments', 'All Itineraries', commentsSet);
+        populateSel('filterRegion', 'All Regions', regionSet);
+        populateSel('filterCountry', 'All Countries', countrySet);
+        populateSel('filterState', 'All States', stateSet);
+        // Mirror dropdowns on staff tab
+        populateSel('staffFilterGeog', 'All Sailing Areas', geogSet);
+        populateSel('staffFilterComments', 'All Itineraries', commentsSet);
+        populateSel('staffFilterRegion', 'All Regions', regionSet);
+        populateSel('staffFilterCountry', 'All Countries', countrySet);
+        populateSel('staffFilterState', 'All States', stateSet);
+
+        mainPage = 1;
+        applyFilters();
+    } catch (err) {
+        setContent('mainContent', `<div class="error-box">Error: ${esc(err.message)}</div>`);
+    }
+}
+
+function setContent(id, html) { document.getElementById(id).innerHTML = html; }
+
+// ── Render duplicate cards ─────────────────────────────────────────
+function renderDuplicates(dups, containerId) {
+    if (!dups.length) {
+        setContent(containerId, '<div class="empty-state"><h3>No Duplicates Found</h3><p>No guests matched the current filters.</p></div>');
+        return;
+    }
     let html = '';
+    const MAX_PKG_BADGES = 3;
     dups.forEach((dup, idx) => {
         const initials = (dup.guest_name || '??').split(' ').map(w => w[0]).join('').slice(0, 2);
-        const pkgBadges = dup.packages.map(p => `<span class="badge badge-pkg">${esc(p)}</span>`).join('');
-
+        const visiblePkgs = dup.packages.slice(0, MAX_PKG_BADGES);
+        const overflow = dup.packages.length - visiblePkgs.length;
+        const pkgBadges = visiblePkgs.map(p => `<span class="badge badge-pkg">${esc(p)}</span>`).join('')
+            + (overflow > 0 ? `<span class="badge badge-more" title="${esc(dup.packages.slice(MAX_PKG_BADGES).join(', '))}">+${overflow} more</span>` : '');
+        const uid = containerId + '-' + idx;
+        const scoreInfo = calculateScore(dup);
         html += `
-        <div class="dup-group" id="group-${idx}">
-            <div class="dup-header" onclick="toggleGroup(${idx})">
+        <div class="dup-group" id="group-${uid}">
+            <div class="dup-header" onclick="toggleGroup('${uid}')">
                 <div class="dup-header-left">
+                    <div class="dup-totals">
+                        <div class="dup-total score">
+                            <div class="dup-total-value">${scoreInfo.score}</div>
+                            <div class="dup-total-label">Score</div>
+                            ${scoreTooltipHTML(scoreInfo)}
+                        </div>
+                        <div class="dup-total" title="Total revenue from every reservation this guest is part of — full booking amount including any other passengers on the same reservation.">
+                            <div class="dup-total-value">${num(dup.guest_total_spent)}</div>
+                            <div class="dup-total-label">Res Rev</div>
+                        </div>
+                        <div class="dup-total cabin" title="Total revenue from every cabin this guest occupied — includes everyone sharing the cabin with them.">
+                            <div class="dup-total-value">${num(dup.guest_total_cabin_rev)}</div>
+                            <div class="dup-total-label">Cabin Rev</div>
+                        </div>
+                        <div class="dup-total guest" title="This guest's own revenue contribution — their personal share of each booking.">
+                            <div class="dup-total-value">${num(dup.guest_total_net)}</div>
+                            <div class="dup-total-label">Pax Rev</div>
+                        </div>
+                    </div>
                     <div class="dup-avatar">${esc(initials)}</div>
                     <div class="dup-info">
-                        <h3>${esc(dup.guest_name)}</h3>
-                        <div class="dup-meta">${esc(dup.email)} &bull; ...${esc(dup.phone_last9)} &bull; DOB: ${esc(dup.birthday)}</div>
+                        <h3>${esc(maskName(dup.guest_name))}</h3>
+                        <div class="dup-meta">${esc(maskEmail(dup.email))}</div>
+                        <div class="dup-meta">${esc(formatPhone(dup))} &bull; DOB: ${esc(maskDOB(dup.birthday))}</div>
                     </div>
                 </div>
-                <div style="display:flex;align-items:center;gap:12px;">
+                <div class="dup-badges">
                     ${pkgBadges}
                     <span class="badge badge-count">${dup.booking_count} bookings</span>
-                    <span class="badge" style="background:rgba(52,211,153,0.15);color:#34d399;">Total: ${num(dup.guest_total_spent)}</span>
                     <span class="chevron">&#9660;</span>
                 </div>
             </div>
             <div class="dup-details">
                 <div class="table-wrap">
                     <table class="guest-table">
-                        <thead>
-                            <tr>
-                                <th>Full Name</th>
-                                <th>Client ID</th>
-                                <th>Guest ID</th>
-                                <th>Res ID</th>
-                                <th>Package</th>
-                                <th>Sail From</th>
-                                <th>Sail To</th>
-                                <th>Cabin</th>
-                                <th>Status</th>
-                                <th>Cabin Fare</th>
-                                <th>Port Charges</th>
-                                <th>Service Fee</th>
-                                <th>Total Net</th>
-                                <th>Res Total</th>
-                                <th>Currency</th>
-                                <th>Source</th>
-                            </tr>
-                        </thead>
+                        <thead><tr>
+                            <th>Full Name</th><th>Client ID</th><th>Guest ID</th><th>Res ID</th>
+                            <th>Package</th><th>Sail From</th><th>Sail To</th><th>Cabin</th><th>Cabin Category</th><th>Guests in Cabin</th>
+                            <th>Status</th><th>Cabin Fare</th><th>Port Charges</th><th>Service Fee</th>
+                            <th>Total Net</th><th>Res Total</th><th>Currency</th><th>Agency</th>
+                        </tr></thead>
                         <tbody>`;
-
         dup.guests.forEach(g => {
-            const statusClass = g.RES_STATUS === 'BK' ? 'status-bk' : g.RES_STATUS === 'CN' ? 'status-cn' : '';
-            html += `
-                            <tr>
-                                <td>${esc(g.FULL_NAME)}</td>
-                                <td>${esc(g.CLIENT_ID)}</td>
-                                <td>${esc(g.GUEST_ID)}</td>
-                                <td>${esc(g.RES_ID)}</td>
-                                <td class="pkg-highlight">${esc(g.PACKAGE_TYPE)}</td>
-                                <td>${formatDate(g.SAIL_DATE_FROM)}</td>
-                                <td>${formatDate(g.SAIL_DATE_TO)}</td>
-                                <td>${esc(g.GUEST_CABIN)}</td>
-                                <td class="${statusClass}">${esc(g.RES_STATUS)}</td>
-                                <td>${num(g.CABIN_FARE_NET)}</td>
-                                <td>${num(g.PORT_CHARGES_NET)}</td>
-                                <td>${num(g.SERVICE_FEE_NET)}</td>
-                                <td><strong>${num(g.TOTAL_NET_AMOUNT)}</strong></td>
-                                <td><strong>${num(g.RES_TOTAL_NET)}</strong></td>
-                                <td>${esc(g.CURRENCY_CODE)}</td>
-                                <td>${esc(g.SOURCE_CODE)}</td>
-                            </tr>`;
+            const sc = g.RES_STATUS === 'BK' ? 'status-bk' : g.RES_STATUS === 'CN' ? 'status-cn' : '';
+            const cabinCat = cabinCategoryFor(g.GUEST_CABIN) || '—';
+            html += `<tr>
+                <td>${esc(maskName(g.FULL_NAME))}</td><td>${esc(g.CLIENT_ID)}</td><td>${esc(g.GUEST_ID)}</td><td>${esc(g.RES_ID)}</td>
+                <td class="pkg-highlight">${esc(g.PACKAGE_TYPE)}</td><td>${formatDate(g.SAIL_DATE_FROM)}</td><td>${formatDate(g.SAIL_DATE_TO)}</td>
+                <td>${esc(g.GUEST_CABIN)}</td><td>${esc(cabinCat)}</td><td>${esc(g.CABIN_GUEST_COUNT ?? '—')}</td><td class="${sc}">${esc(g.RES_STATUS)}</td>
+                <td>${num(g.CABIN_FARE_NET)}</td><td>${num(g.PORT_CHARGES_NET)}</td><td>${num(g.SERVICE_FEE_NET)}</td>
+                <td><strong>${num(g.TOTAL_NET_AMOUNT)}</strong></td><td><strong>${num(g.RES_TOTAL_NET)}</strong></td>
+                <td>${esc(g.CURRENCY_CODE)}</td><td>${esc(g.AGENCY_NAME)}</td>
+            </tr>`;
         });
-
-        html += `
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>`;
+        html += `</tbody></table></div></div></div>`;
     });
-
-    content.innerHTML = html;
+    setContent(containerId, html);
 }
 
-function toggleGroup(idx) {
-    document.getElementById('group-' + idx).classList.toggle('open');
+function toggleGroup(uid) { document.getElementById('group-' + uid).classList.toggle('open'); }
+
+// ── Staff tab ──────────────────────────────────────────────────────
+function getFilteredStaff() {
+    const q = document.getElementById('staffSearch').value.toLowerCase().trim();
+    const pkg = document.getElementById('staffFilterPackage').value;
+    const geog = document.getElementById('staffFilterGeog').value;
+    const comments = document.getElementById('staffFilterComments').value;
+    const region = document.getElementById('staffFilterRegion').value;
+    const country = document.getElementById('staffFilterCountry').value;
+    const state = document.getElementById('staffFilterState').value;
+    const btype = document.getElementById('staffFilterBookingType').value;
+    const gtype = document.getElementById('staffFilterGuestType').value;
+    const revMin = parseFloat(document.getElementById('staffRevMin').value);
+    const revMax = parseFloat(document.getElementById('staffRevMax').value);
+    let dups = getStaffDups();
+    if (pkg) dups = dups.filter(d => d.packages.includes(pkg));
+    if (geog) dups = dups.filter(d => d.guests.some(g => (g.GEOG_AREA_CODE || '') === geog));
+    if (comments) dups = dups.filter(d => d.guests.some(g => (g.COMMENTS || '') === comments));
+    if (region) dups = dups.filter(d => d.guests.some(g => regionFor(g.AGENCY_COUNTRY_CODE) === region));
+    if (country) dups = dups.filter(d => d.guests.some(g => (g.AGENCY_COUNTRY_CODE || '') === country));
+    if (state) dups = dups.filter(d => d.guests.some(g => (g.AGENCY_STATE_CODE || '') === state));
+    if (btype) dups = dups.filter(d => d.guests.some(g => bookingType(g) === btype));
+    if (gtype) dups = dups.filter(d => d.guests.some(g => guestType(g) === gtype));
+    if (!isNaN(revMin)) dups = dups.filter(d => (d.guest_total_spent || 0) >= revMin);
+    if (!isNaN(revMax)) dups = dups.filter(d => (d.guest_total_spent || 0) <= revMax);
+    if (q) dups = dups.filter(d =>
+        d.guest_name.toLowerCase().includes(q) ||
+        d.email.toLowerCase().includes(q) ||
+        d.phone_last9.includes(q) ||
+        d.packages.some(p => p.toLowerCase().includes(q))
+    );
+    const sortBy = (document.getElementById('staffSortBy') || {}).value || 'res_rev';
+    return sortDups(dups, sortBy, staffSortDir);
 }
 
+function resetStaffFilters() {
+    ['staffSearch', 'staffFilterPackage', 'staffFilterGeog', 'staffFilterComments',
+     'staffFilterRegion', 'staffFilterBookingType', 'staffFilterGuestType', 'staffRevMin', 'staffRevMax'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    repopulateStaffCountriesForRegion('');
+    repopulateStaffStatesForCountry('');
+    document.getElementById('staffSortBy').value = 'res_rev';
+    staffPage = 1;
+    renderStaff();
+}
+
+function repopulateStaffCountriesForRegion(region) {
+    const sel = document.getElementById('staffFilterCountry');
+    const allCountries = window._allCountries || new Set();
+    const countries = region
+        ? (window._regionToCountries && window._regionToCountries[region] ? [...window._regionToCountries[region]] : [])
+        : [...allCountries];
+    sel.innerHTML = '<option value="">All Countries</option>';
+    countries.sort().forEach(v => sel.innerHTML += `<option value="${esc(v)}">${esc(v)}</option>`);
+}
+function repopulateStaffStatesForCountry(country) {
+    const sel = document.getElementById('staffFilterState');
+    const allStates = new Set();
+    Object.values(window._countryToStates || {}).forEach(set => set.forEach(s => allStates.add(s)));
+    const states = country
+        ? (window._countryToStates && window._countryToStates[country] ? [...window._countryToStates[country]] : [])
+        : [...allStates];
+    sel.innerHTML = '<option value="">All States</option>';
+    states.sort().forEach(v => sel.innerHTML += `<option value="${esc(v)}">${esc(v)}</option>`);
+}
+
+// Wire staff filter listeners
+['staffSearch', 'staffFilterPackage', 'staffFilterGeog', 'staffFilterComments',
+ 'staffFilterBookingType', 'staffFilterGuestType', 'staffRevMin', 'staffRevMax'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener(el.tagName === 'INPUT' && el.type !== 'number' ? 'input' : 'change',
+        () => { staffPage = 1; renderStaff(); });
+    if (el && el.tagName === 'INPUT' && el.type === 'number') el.addEventListener('input', () => { staffPage = 1; renderStaff(); });
+});
+document.getElementById('staffFilterRegion').addEventListener('change', (e) => {
+    repopulateStaffCountriesForRegion(e.target.value);
+    repopulateStaffStatesForCountry('');
+    staffPage = 1;
+    renderStaff();
+});
+document.getElementById('staffFilterCountry').addEventListener('change', (e) => {
+    repopulateStaffStatesForCountry(e.target.value);
+    staffPage = 1;
+    renderStaff();
+});
+document.getElementById('staffFilterState').addEventListener('change', () => { staffPage = 1; renderStaff(); });
+
+function renderStaff() {
+    const dups = getFilteredStaff();
+
+    const totalBookings = dups.reduce((s, d) => s + d.booking_count, 0);
+    const totalRev = dups.reduce((s, d) => s + d.guest_total_spent, 0);
+    document.getElementById('staffGroups').textContent = dups.length.toLocaleString();
+    document.getElementById('staffBookings').textContent = totalBookings.toLocaleString();
+    document.getElementById('staffRevenue').textContent = num(totalRev);
+
+    const avgBookings = dups.length > 0 ? (totalBookings / dups.length) : 0;
+    document.getElementById('staffAvgBookings').textContent = avgBookings.toFixed(1);
+
+    const allDupsRevenue = (window._allDuplicates || []).reduce((s, d) => s + (d.guest_total_spent || 0), 0);
+    const revShare = allDupsRevenue > 0 ? (totalRev / allDupsRevenue * 100) : 0;
+    document.getElementById('staffRevenueShare').textContent = revShare.toFixed(1) + '%';
+
+    const pageSize = getPageSize('staffPageSize');
+    const totalPages = Math.max(1, Math.ceil(dups.length / pageSize));
+    if (staffPage > totalPages) staffPage = 1;
+    const start = (staffPage - 1) * pageSize;
+    renderDuplicates(dups.slice(start, start + pageSize), 'staffContent');
+    renderPagination('staffPagination', staffPage, totalPages, dups.length, pageSize, 'goToStaffPage');
+    renderPagination('staffPaginationTop', staffPage, totalPages, dups.length, pageSize, 'goToStaffPage');
+}
+
+document.getElementById('staffSearch').addEventListener('input', () => { staffPage = 1; renderStaff(); });
+document.getElementById('staffFilterPackage').addEventListener('change', () => { staffPage = 1; renderStaff(); });
+['staffRevMin', 'staffRevMax'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => { staffPage = 1; renderStaff(); });
+});
+
+function exportStaffCSV() { exportCSVData(getFilteredStaff(), 'staff_duplicates'); }
+
+// ── Filters (main tab) ─────────────────────────────────────────────
+document.getElementById('searchInput').addEventListener('input', () => { mainPage = 1; applyFilters(); });
+document.getElementById('filterPackage').addEventListener('change', () => { mainPage = 1; applyFilters(); });
+['filterGeog', 'filterComments', 'filterState', 'filterBookingType', 'filterGuestType'].forEach(id => {
+    document.getElementById(id).addEventListener('change', () => { mainPage = 1; applyFilters(); });
+});
+function repopulateCountriesForRegion(region) {
+    const sel = document.getElementById('filterCountry');
+    const allCountries = window._allCountries || new Set();
+    const countries = region
+        ? (window._regionToCountries && window._regionToCountries[region] ? [...window._regionToCountries[region]] : [])
+        : [...allCountries];
+    sel.innerHTML = '<option value="">All Countries</option>';
+    countries.sort().forEach(v => sel.innerHTML += `<option value="${esc(v)}">${esc(v)}</option>`);
+}
+function repopulateStatesForCountry(country) {
+    const sel = document.getElementById('filterState');
+    const allStates = new Set();
+    Object.values(window._countryToStates || {}).forEach(set => set.forEach(s => allStates.add(s)));
+    const states = country
+        ? (window._countryToStates && window._countryToStates[country] ? [...window._countryToStates[country]] : [])
+        : [...allStates];
+    sel.innerHTML = '<option value="">All States</option>';
+    states.sort().forEach(v => sel.innerHTML += `<option value="${esc(v)}">${esc(v)}</option>`);
+}
+document.getElementById('filterRegion').addEventListener('change', (e) => {
+    repopulateCountriesForRegion(e.target.value);
+    repopulateStatesForCountry('');
+    mainPage = 1;
+    applyFilters();
+});
+function resetMainFilters() {
+    ['searchInput', 'filterPackage', 'filterGeog', 'filterComments', 'filterRegion', 'filterBookingType', 'filterGuestType', 'mainRevMin', 'mainRevMax'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    repopulateCountriesForRegion('');
+    repopulateStatesForCountry('');
+    document.getElementById('mainSortBy').value = 'res_rev';
+    mainPage = 1;
+    applyFilters();
+}
+document.getElementById('filterCountry').addEventListener('change', (e) => {
+    repopulateStatesForCountry(e.target.value);
+    mainPage = 1;
+    applyFilters();
+});
+['mainRevMin', 'mainRevMax'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => { mainPage = 1; applyFilters(); });
+});
+
+// Internal / agency / partner email domains. When the "Hide Direct + internal/agency
+// emails" checkbox is on, any group with a Direct booking from one of these domains
+// is suppressed from the list and CSV export.
+const INTERNAL_DIRECT_DOMAINS = [
+    '@cruisesaudi.com','@almosafer.com','@rehltna.com','@alfaristours.com',
+    '@travelstarsksa.com','@raynab2b.com','@almatravel.co','@skywaysksa.com',
+    '@jawwytravel.com','@itlworld.com','@zahidtravel.com',
+    '@terhab.sa','@abusarhadtravel.com','@worldgatesa.com','@salambooking.com',
+    '@flyday.com.sa','@raynatours.com','@yalasafir.com','@reserval.com',
+    '@alnoorholidays.com','@touri.sa','@traveazy.com','@tour.sa',
+    '@holidaytime-sa.com','@travelzone.com.sa','@konooztravel.com',
+    '@smart-ticket.net','@bluehorizon.sa','@aroya.com','@cruisearoya.com',
+    '@mycruiseksa.com','@executivecruises.eu','@karavancruises.com',
+    '@rccl.com.tr','@cruclub.ru','@cruisetopic.net','@prarabia.me',
+    '@sela.sa','@spikemedia.com','@spikeemedia.com','@socialclininc.sa',
+    '@lepuremarketing.com','@blueelephantprod.com','@movementprds.com',
+    '@arabnews.com','@nexturn.me','@tasama.com.sa',
+    '@schiffsreisen-magazin.de','@wearelotus.co.uk','@formula.com.sa',
+    '@taibaflocks.sa','@britamarabia.com','@rhapsodygroup.net',
+    '@scott-campbell.co.uk','@mwakeb.com'
+];
+
+function isInternalDirect(dup) {
+    // True when the group's email ends with an internal/agency domain AND
+    // at least one of its reservations is booked through a Direct channel.
+    const email = (dup.email || '').toLowerCase();
+    if (!email) return false;
+    const inDomain = INTERNAL_DIRECT_DOMAINS.some(d => email.endsWith(d));
+    if (!inDomain) return false;
+    return (dup.guests || []).some(g => bookingType(g) === 'Direct');
+}
+
+function getFilteredMain() {
+    const q = document.getElementById('searchInput').value.toLowerCase().trim();
+    const pkg = document.getElementById('filterPackage').value;
+    const geog = document.getElementById('filterGeog').value;
+    const comments = document.getElementById('filterComments').value;
+    const region = document.getElementById('filterRegion').value;
+    const country = document.getElementById('filterCountry').value;
+    const state = document.getElementById('filterState').value;
+    const btype = document.getElementById('filterBookingType').value;
+    const gtype = document.getElementById('filterGuestType').value;
+    const revMin = parseFloat(document.getElementById('mainRevMin').value);
+    const revMax = parseFloat(document.getElementById('mainRevMax').value);
+    const hideInternal = (document.getElementById('hideInternalDirect') || {checked: true}).checked;
+    let filtered = getNonStaffDups();
+    if (hideInternal) filtered = filtered.filter(d => !isInternalDirect(d));
+    if (pkg) filtered = filtered.filter(d => d.packages.includes(pkg));
+    if (geog) filtered = filtered.filter(d => d.guests.some(g => (g.GEOG_AREA_CODE || '') === geog));
+    if (comments) filtered = filtered.filter(d => d.guests.some(g => (g.COMMENTS || '') === comments));
+    if (region) filtered = filtered.filter(d => d.guests.some(g => regionFor(g.AGENCY_COUNTRY_CODE) === region));
+    if (country) filtered = filtered.filter(d => d.guests.some(g => (g.AGENCY_COUNTRY_CODE || '') === country));
+    if (state) filtered = filtered.filter(d => d.guests.some(g => (g.AGENCY_STATE_CODE || '') === state));
+    if (btype) filtered = filtered.filter(d => d.guests.some(g => bookingType(g) === btype));
+    if (gtype) filtered = filtered.filter(d => d.guests.some(g => guestType(g) === gtype));
+    if (!isNaN(revMin)) filtered = filtered.filter(d => (d.guest_total_spent || 0) >= revMin);
+    if (!isNaN(revMax)) filtered = filtered.filter(d => (d.guest_total_spent || 0) <= revMax);
+    if (q) filtered = filtered.filter(d =>
+        d.guest_name.toLowerCase().includes(q) ||
+        d.email.toLowerCase().includes(q) ||
+        d.phone_last9.includes(q) ||
+        d.packages.some(p => p.toLowerCase().includes(q)) ||
+        d.guests.some(g => (g.FULL_NAME||'').toLowerCase().includes(q) || String(g.GUEST_ID).includes(q) || String(g.RES_ID).includes(q))
+    );
+    const sortBy = (document.getElementById('mainSortBy') || {}).value || 'res_rev';
+    return sortDups(filtered, sortBy, mainSortDir);
+}
+
+function applyFilters() {
+    const filtered = getFilteredMain();
+
+    // KPI cards: the 5 below reflect the filtered subset. statTotal and statPackages
+    // stay on the global Oracle counts (set once on load in loadData) because their
+    // labels say "All-Time" / "Cruise Packages" — those are system-wide, not view-bound.
+    const fBookings = filtered.reduce((s, d) => s + d.booking_count, 0);
+    const fRevenue = filtered.reduce((s, d) => s + (d.guest_total_spent || 0), 0);
+    document.getElementById('statGroups').textContent = filtered.length.toLocaleString();
+    document.getElementById('statDupGuests').textContent = fBookings.toLocaleString();
+    document.getElementById('statRevenue').textContent = Math.round(fRevenue).toLocaleString();
+    const fAvgLTV = filtered.length > 0 ? Math.round(fRevenue / filtered.length) : 0;
+    document.getElementById('statAvgLTV').textContent = fAvgLTV.toLocaleString();
+    const fHighValue = filtered.filter(d => calculateScore(d).score >= 70).length;
+    document.getElementById('statHighValue').textContent = fHighValue.toLocaleString();
+
+    const pageSize = getPageSize('mainPageSize');
+    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    if (mainPage > totalPages) mainPage = 1;
+    const start = (mainPage - 1) * pageSize;
+    renderDuplicates(filtered.slice(start, start + pageSize), 'mainContent');
+    renderPagination('mainPagination', mainPage, totalPages, filtered.length, pageSize, 'goToMainPage');
+    renderPagination('mainPaginationTop', mainPage, totalPages, filtered.length, pageSize, 'goToMainPage');
+}
+
+// ── CSV Export ─────────────────────────────────────────────────────
+function exportCSV() { exportCSVData(getFilteredMain(), 'repeat_guests'); }
+
+function exportCSVData(dups, filename) {
+    if (!dups.length) return;
+    const headers = ['Group','Score','Full Name','Client ID','Guest ID','Res ID','Email','Phone','Intl Code','Birthday','Init Date','Package','Sail From','Sail To','Cabin','Guests in Cabin','Cabin Total Rev','Status','Cabin Fare','Port Charges','Service Fee','Total Net','Res Total','Total','Total Cabin','Guest Total','Currency','Agency','Booking Channel','Booking Type','Region','Country','State','Sailing Area','Itinerary'];
+    let csv = headers.join(',') + '\n';
+    dups.forEach((dup, i) => {
+        const score = calculateScore(dup).score;
+        dup.guests.forEach(g => {
+            const bday = ((g.BIRTHDAY||'').slice(0,10)) || (dup.birthday||'');
+            const initDate = (g.RH_INIT_DATE||'').slice(0,10);
+            csv += [i+1, score, `"${g.FULL_NAME||''}"`, g.CLIENT_ID, g.GUEST_ID, g.RES_ID,
+                `"${(g.EMAIL||'').toLowerCase()}"`, `"${g.PHONE_NUMBER||''}"`, `"${g.INTL_CODE||''}"`, `"${bday}"`, `"${initDate}"`,
+                `"${g.PACKAGE_TYPE||''}"`, `"${g.SAIL_DATE_FROM||''}"`, `"${g.SAIL_DATE_TO||''}"`,
+                g.GUEST_CABIN, g.CABIN_GUEST_COUNT ?? '', g.CABIN_TOTAL_REV ?? '', g.RES_STATUS, g.CABIN_FARE_NET, g.PORT_CHARGES_NET,
+                g.SERVICE_FEE_NET, g.TOTAL_NET_AMOUNT, g.RES_TOTAL_NET, dup.guest_total_spent, dup.guest_total_cabin_rev, dup.guest_total_net, g.CURRENCY_CODE, `"${g.AGENCY_NAME||''}"`, bookingChannel(g), bookingType(g), regionFor(g.AGENCY_COUNTRY_CODE), `"${g.AGENCY_COUNTRY_CODE||''}"`, `"${g.AGENCY_STATE_CODE||''}"`, `"${g.GEOG_AREA_CODE||''}"`, `"${(g.COMMENTS||'').replace(/"/g,'""')}"`
+            ].join(',') + '\n';
+        });
+    });
+    const a = Object.assign(document.createElement('a'), {
+        href: URL.createObjectURL(new Blob([csv], {type:'text/csv'})),
+        download: filename + '_' + new Date().toISOString().slice(0,10) + '.csv'
+    });
+    a.click();
+}
+
+// ── Helpers ────────────────────────────────────────────────────────
 function esc(val) {
     if (val == null) return '';
-    const div = document.createElement('div');
-    div.textContent = String(val);
-    return div.innerHTML;
+    const d = document.createElement('div');
+    d.textContent = String(val);
+    return d.innerHTML;
 }
-
 function num(val) {
     if (val == null) return '0';
     return Number(val).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2});
 }
-
 function formatDate(val) {
     if (!val) return '';
     try {
         const d = new Date(val);
-        if (isNaN(d)) return esc(val);
-        return d.toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: '2-digit'});
+        return isNaN(d) ? esc(val) : d.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'2-digit'});
     } catch { return esc(val); }
 }
-
-// Search & filter
-document.getElementById('searchInput').addEventListener('input', applyFilters);
-document.getElementById('filterPackage').addEventListener('change', applyFilters);
-
-function applyFilters() {
-    const q = document.getElementById('searchInput').value.toLowerCase().trim();
-    const pkg = document.getElementById('filterPackage').value;
-
-    let filtered = allDuplicates;
-
-    if (pkg) {
-        filtered = filtered.filter(d => d.packages.includes(pkg));
-    }
-
-    if (q) {
-        filtered = filtered.filter(d => {
-            if (d.guest_name.toLowerCase().includes(q)) return true;
-            if (d.email.toLowerCase().includes(q)) return true;
-            if (d.phone_last9.includes(q)) return true;
-            if (d.packages.some(p => p.toLowerCase().includes(q))) return true;
-            if (d.guests.some(g =>
-                (g.FULL_NAME || '').toLowerCase().includes(q) ||
-                String(g.GUEST_ID).includes(q) ||
-                String(g.RES_ID).includes(q)
-            )) return true;
-            return false;
-        });
-    }
-
-    renderDuplicates(filtered);
+function formatPhone(dup) {
+    const masked = maskPhone(dup.phone_last9);
+    if (!masked) return '';
+    const g = (dup.guests || [])[0] || {};
+    const codeDigits = String(g.INTL_CODE || '').replace(/\D/g, '');
+    return codeDigits ? `+${codeDigits} ${masked}` : masked;
 }
+function maskName(name) {
+    if (!name) return '';
+    return String(name)
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[^A-Za-z؀-ۿ\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+function bookingChannel(g) {
+    const agencyRaw = g.AGENCY_NAME || '';
+    const agency = agencyRaw.toLowerCase();
+    const operator = (g.OPERATOR_NAME || '').toLowerCase();
+    const source = (g.SOURCE_CODE || '').toUpperCase();
+    if (source === 'MOBAPP') return 'MOBAPP';
+    if (agency.includes('aroya') && operator.includes('bizlogic')) return 'E-COMMERCE';
+    if (agency.includes('aroya')) return 'TELESALES';
+    if (agency.includes('riyadh season')) return 'RIYADH SEASON';
+    if (agency.includes('future cruises')) return 'FUTURE CRUISES';
+    return agencyRaw;
+}
+const DIRECT_CHANNELS = new Set(['E-COMMERCE', 'TELESALES', 'MOBAPP', 'RIYADH SEASON', 'FUTURE CRUISES']);
+function bookingType(g) {
+    return DIRECT_CHANNELS.has(bookingChannel(g)) ? 'Direct' : 'Indirect';
+}
+function guestType(g) {
+    return parseFloat(g.CABIN_FARE_NET || 0) === 0 ? 'Special Guests' : 'Paid Guests';
+}
+const REGION_MAP = {
+    SA: 'KSA',
+    AE: 'GCC', QA: 'GCC', BH: 'GCC', KW: 'GCC',
+    EG: 'MENA', MA: 'MENA', TN: 'MENA',
+    TR: 'Turkey',
+    RU: 'Russia',
+    AM: 'CIS', AZ: 'CIS', BY: 'CIS', KZ: 'CIS', KG: 'CIS', MD: 'CIS', TJ: 'CIS', UZ: 'CIS', TM: 'CIS', CIS: 'CIS',
+    DE: 'Europe', IT: 'Europe',
+    MY: 'APAC',
+};
+function regionFor(country) {
+    return REGION_MAP[(country || '').toUpperCase()] || '';
+}
+function isValidPhone(phone, intlCode) {
+    if (!phone) return false;
+    let phoneDigits = String(phone).replace(/\D/g, '');
+    const codeDigits = (intlCode == null ? '' : String(intlCode)).replace(/\D/g, '');
 
-// CSV Export
-function exportCSV() {
-    if (!allDuplicates.length) return;
-    const headers = ['Group','Full Name','Client ID','Guest ID','Res ID','Email','Phone','Birthday','Package','Sail From','Sail To','Cabin','Status','Cabin Fare','Port Charges','Service Fee','Total Net','Res Total','Guest Total Spent','Currency'];
-    let csv = headers.join(',') + '\n';
+    phoneDigits = phoneDigits.replace(/^00+/, '');
 
-    allDuplicates.forEach((dup, i) => {
-        dup.guests.forEach(g => {
-            csv += [
-                i + 1,
-                '"' + (g.FULL_NAME || '') + '"',
-                g.CLIENT_ID,
-                g.GUEST_ID,
-                g.RES_ID,
-                '"' + (g.EMAIL || '') + '"',
-                '"' + (g.PHONE_NUMBER || '') + '"',
-                '"' + (dup.birthday || '') + '"',
-                '"' + (g.PACKAGE_TYPE || '') + '"',
-                '"' + (g.SAIL_DATE_FROM || '') + '"',
-                '"' + (g.SAIL_DATE_TO || '') + '"',
-                g.GUEST_CABIN,
-                g.RES_STATUS,
-                g.CABIN_FARE_NET,
-                g.PORT_CHARGES_NET,
-                g.SERVICE_FEE_NET,
-                g.TOTAL_NET_AMOUNT,
-                g.RES_TOTAL_NET,
-                dup.guest_total_spent,
-                g.CURRENCY_CODE
-            ].join(',') + '\n';
-        });
+    if (codeDigits) {
+        if (codeDigits.length > 4 || /^0+$/.test(codeDigits)) return false;
+        if (phoneDigits.startsWith(codeDigits)) phoneDigits = phoneDigits.slice(codeDigits.length);
+        if (phoneDigits.length < 7 || phoneDigits.length > 11) return false;
+    } else {
+        if (phoneDigits.length < 7 || phoneDigits.length > 15) return false;
+    }
+
+    if (!phoneDigits) return false;
+    if (/^0+$/.test(phoneDigits)) return false;
+    if (/^(\d)\1+$/.test(phoneDigits)) return false;
+    if (/^0?(123456789|1234567890|987654321)$/.test(phoneDigits)) return false;
+    return true;
+}
+function calculateScore(dup) {
+    const guests = dup.guests || [];
+    const today = new Date();
+
+    const completedByRes = new Map();
+    guests.forEach(g => {
+        if (!g.RES_ID || !g.SAIL_DATE_FROM) return;
+        const sd = new Date(g.SAIL_DATE_FROM);
+        if (isNaN(sd) || sd > today) return;
+        if (!completedByRes.has(g.RES_ID)) {
+            completedByRes.set(g.RES_ID, { date: sd, geog: g.GEOG_AREA_CODE || '' });
+        }
     });
+    const sailings = [...completedByRes.values()];
+    const sailingCount = sailings.length;
 
-    const blob = new Blob([csv], {type: 'text/csv'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'guest_duplicates_' + new Date().toISOString().slice(0,10) + '.csv';
-    a.click();
-    URL.revokeObjectURL(url);
+    const rules = [];
+    let score = 0;
+    const add = (hit, label, pts) => {
+        rules.push({ hit, label, pts });
+        if (hit) score += pts;
+    };
+
+    if (sailingCount >= 3) {
+        add(true, `3+ sailings (${sailingCount})`, 30);
+    } else if (sailingCount === 2) {
+        add(true, '2 sailings', 20);
+    } else {
+        add(false, '2+ sailings', 20);
+    }
+
+    let recencyHit = false;
+    if (sailingCount > 0) {
+        const lastSail = Math.max(...sailings.map(s => s.date.getTime()));
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+        recencyHit = lastSail >= sixMonthsAgo.getTime();
+    }
+    add(recencyHit, 'Last sailed within 6 months', 15);
+
+    let redHit = false;
+    if (sailingCount > 0) {
+        const sortedDesc = sailings.slice().sort((a, b) => b.date - a.date);
+        const lastWasRed = sortedDesc[0].geog === 'RED';
+        const redCount = sailings.filter(s => s.geog === 'RED').length;
+        redHit = lastWasRed || redCount >= 2;
+    }
+    add(redHit, 'Last Red Sea or 2+ Red Sea sailings', 15);
+
+    const hasPremiumCabin = guests.some(g => {
+        const cat = (cabinCategoryFor(g.GUEST_CABIN) || '').toLowerCase();
+        return /balcony|suite|premium/.test(cat);
+    });
+    add(hasPremiumCabin, 'Prior balcony / suite / premium cabin', 10);
+
+    const cabinsByRes = {};
+    guests.forEach(g => {
+        if (!g.RES_ID) return;
+        if (!cabinsByRes[g.RES_ID]) cabinsByRes[g.RES_ID] = new Set();
+        if (g.GUEST_CABIN) cabinsByRes[g.RES_ID].add(String(g.GUEST_CABIN));
+    });
+    const multiCabinByOwn = Object.values(cabinsByRes).some(s => s.size > 1);
+    const multiCabinByTotal = guests.some(g => {
+        const cabin = parseFloat(g.CABIN_TOTAL_REV || 0);
+        const res = parseFloat(g.RES_TOTAL_NET || 0);
+        return res > 0 && cabin > 0 && cabin < res * 0.99;
+    });
+    const familyCabin = guests.some(g => (g.CABIN_GUEST_COUNT || 0) >= 3);
+    add(multiCabinByOwn || multiCabinByTotal || familyCabin, 'Family or multi-cabin booking', 10);
+
+    add(guests.some(g => bookingType(g) === 'Direct'), 'Direct / call-centre booking', 10);
+
+    add(guests.some(g => isValidPhone(g.PHONE_NUMBER, g.INTL_CODE)), 'Valid WhatsApp or Mobile Contact', 10);
+
+    const isPromoter      = dup.nps_label === 'Promoter';
+    const isDetractor     = dup.nps_label === 'Detractor';
+    const noComplaint     = dup.no_complaint_flag === true;
+    const pastComplaint   = dup.has_past_complaint === true;
+
+    if (isPromoter || noComplaint) {
+        add(true, 'Positive NPS or no complaint flag', 10);
+    }
+    if (isDetractor || pastComplaint) {
+        add(true, 'Unresolved complaint or low NPS', -30);
+    }
+
+    return { score, rules, nps: dup.nps_label || null };
+}
+function scoreTooltipHTML(info) {
+    const rows = info.rules.map(r => `
+        <div class="st-row ${r.hit ? 'st-hit' : 'st-miss'}${r.pts < 0 ? ' st-neg' : ''}">
+            <span class="st-label">${r.hit ? '✓' : '○'} ${esc(r.label)}</span>
+            <span class="st-pts">${r.pts >= 0 ? '+' : ''}${r.pts}</span>
+        </div>`).join('');
+    const npsNote = info.nps
+        ? `<div class="st-note">NPS reflects the guest's latest submitted survey feedback.</div>`
+        : '';
+    return `
+        <div class="score-tooltip">
+            <div class="st-title">Loyalty score</div>
+            ${rows}
+            <hr/>
+            <div class="st-total"><span>Total</span><span>${info.score} / 110</span></div>
+            ${npsNote}
+        </div>`;
+}
+let mainSortDir = 'desc';
+let staffSortDir = 'desc';
+function toggleMainSortDir() {
+    mainSortDir = mainSortDir === 'desc' ? 'asc' : 'desc';
+    document.getElementById('mainSortDirBtn').textContent = mainSortDir === 'desc' ? '↓ Desc' : '↑ Asc';
+    applyFilters();
+}
+function toggleStaffSortDir() {
+    staffSortDir = staffSortDir === 'desc' ? 'asc' : 'desc';
+    document.getElementById('staffSortDirBtn').textContent = staffSortDir === 'desc' ? '↓ Desc' : '↑ Asc';
+    renderStaff();
+}
+function sortDups(dups, sortBy, dir) {
+    const mult = (dir === 'asc') ? -1 : 1;
+    if (sortBy === 'score') {
+        return [...dups].sort((a, b) => mult * (calculateScore(b).score - calculateScore(a).score));
+    }
+    const key = {
+        res_rev: 'guest_total_spent',
+        cabin_rev: 'guest_total_cabin_rev',
+        pax_rev: 'guest_total_net',
+        bookings: 'booking_count',
+    }[sortBy] || 'guest_total_spent';
+    return [...dups].sort((a, b) => mult * ((b[key] || 0) - (a[key] || 0)));
+}
+function maskEmail(email) {
+    if (!email) return '';
+    const s = String(email).toLowerCase();
+    const at = s.indexOf('@');
+    if (at <= 0) return s[0] + '•••••';
+    const local = s.slice(0, at);
+    const domain = s.slice(at);
+    const head = local.slice(0, 1);
+    return head + '•'.repeat(Math.max(3, local.length - 1)) + domain;
+}
+function maskPhone(p) {
+    if (p == null) return '';
+    const s = String(p);
+    if (s.length <= 4) return '•'.repeat(s.length);
+    return '•'.repeat(s.length - 4) + s.slice(-4);
+}
+function maskDOB(dob) {
+    if (!dob) return '';
+    const s = String(dob);
+    const m = s.match(/^(\d{4})/);
+    return m ? m[1] + '-••-••' : '••••-••-••';
 }
 
-// Initial load
+// ── Dashboard KPI stats (populated client-side, excludes staff) ────
+function loadDashboardStats() {
+    const base = getNonStaffDups();
+    if (!base.length) return;
+    const repeatGuestCount = base.length;
+
+    const totalScore = base.reduce((s, d) => s + calculateScore(d).score, 0);
+    const avgScore = repeatGuestCount > 0 ? (totalScore / repeatGuestCount).toFixed(1) : '0';
+    document.getElementById('dashAvgScore').textContent = avgScore + ' / 110';
+
+    const today = new Date();
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+    let activeCount = 0;
+    let futurePipeline = 0;
+    base.forEach(d => {
+        let isActive = false;
+        d.guests.forEach(g => {
+            if (!g.SAIL_DATE_FROM) return;
+            const sd = new Date(g.SAIL_DATE_FROM);
+            if (isNaN(sd)) return;
+            if (sd >= twelveMonthsAgo && sd <= today) isActive = true;
+            if (sd > today) futurePipeline++;
+        });
+        if (isActive) activeCount++;
+    });
+    document.getElementById('dashActiveGuests').textContent =
+        activeCount.toLocaleString() + ' / ' + repeatGuestCount.toLocaleString();
+    document.getElementById('dashFuturePipeline').textContent = futurePipeline.toLocaleString();
+}
+
+// ── Dashboard bridge (called from module script) ───────────────────
+window._dashboardRender = null;
+
+function getDashData() {
+    const pkg = document.getElementById('dashFilterPackage')?.value || '';
+    const base = getNonStaffDups();
+    return pkg ? base.filter(d => d.packages.includes(pkg)) : base;
+}
+
+function renderDashboard() {
+    loadDashboardStats();
+    if (!window._dashboardRender) {
+        window._pendingDashRender = true;
+        return;
+    }
+    window._pendingDashRender = false;
+    window._dashboardRender(getDashData());
+}
+
+function applyDashFilter() {
+    dashboardRendered = true;
+    renderDashboard();
+}
+
+function resetDashFilters() {
+    const sel = document.getElementById('dashFilterPackage');
+    if (sel) sel.value = '';
+    applyDashFilter();
+}
+
 loadData();
 </script>
+
+<!-- MUI X Charts (React island) — pre-built bundle from /frontend, no CDN/peer-dep games -->
+<script src="/static/charts.bundle.js"></script>
+<script>
+(function() {
+    // MUI X Charts palette (Material 200-shades for dark mode)
+    const COLORS = ['#4DD0E1','#64B5F6','#BA68C8','#FFB74D','#81C784','#F06292','#FFD54F','#7986CB','#E57373','#A1887F'];
+    const FONT_FAMILY = "'Inter', 'Roboto', 'Segoe UI', sans-serif";
+
+    const chartConfigs = {};
+    const heatmapData = {};
+
+    function compactNumber(v) {
+        if (v == null || isNaN(v)) return '';
+        const abs = Math.abs(v);
+        if (abs >= 1e6) return (v / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+        if (abs >= 1e3) return Math.round(v / 1e3) + 'K';
+        return Math.round(v).toLocaleString();
+    }
+
+    function computeChartData(duplicates) {
+        const pkgMap = {}, revMap = {}, cabinRevMap = {}, natMap = {};
+        const monthMap = {}, agencyMap = {}, langMap = {}, combosMap = {};
+        const regionBkMap = {}, regionRevMap = {};
+        const sailAreaBkMap = {}, sailAreaRevMap = {};
+        const btypeBkMap = { Direct: 0, Indirect: 0 };
+        const btypeRevMap = { Direct: 0, Indirect: 0 };
+        const itineraryMap = {};
+        const scoreBuckets = { '0-29': 0, '30-49': 0, '50-69': 0, '70-89': 0, '90-100': 0 };
+        const sailingsBuckets = { '2': 0, '3': 0, '4': 0, '5-9': 0, '10+': 0 };
+        const seenResForAgency = new Set();
+        // For 2-D heatmap: cabinRevByMonth[cabinCategory][YYYY-MM] = revenue
+        const cabinRevByMonth = {};
+        const monthsSeen = new Set();
+        // Age buckets — one count per repeat guest (not per booking)
+        const ageBucketDefs = [
+            { label: '<18',   min: 0,  max: 17 },
+            { label: '18-24', min: 18, max: 24 },
+            { label: '25-34', min: 25, max: 34 },
+            { label: '35-44', min: 35, max: 44 },
+            { label: '45-54', min: 45, max: 54 },
+            { label: '55-64', min: 55, max: 64 },
+            { label: '65+',   min: 65, max: 200 },
+        ];
+        const ageBucketCounts = Object.fromEntries(ageBucketDefs.map(b => [b.label, 0]));
+
+        duplicates.forEach(dup => {
+            const pkgs = dup.packages;
+            for (let i = 0; i < pkgs.length; i++) {
+                for (let j = i + 1; j < pkgs.length; j++) {
+                    const combo = [pkgs[i], pkgs[j]].sort().join(' + ');
+                    combosMap[combo] = (combosMap[combo] || 0) + 1;
+                }
+            }
+
+            // Age — count this repeat guest once
+            const firstAge = parseFloat(dup.guests[0]?.AGE);
+            if (!isNaN(firstAge) && firstAge > 0) {
+                const bucket = ageBucketDefs.find(b => firstAge >= b.min && firstAge <= b.max);
+                if (bucket) ageBucketCounts[bucket.label]++;
+            }
+
+            // Score bucket — one per repeat guest
+            const sInfo = calculateScore(dup);
+            const s = sInfo.score;
+            if (s < 30) scoreBuckets['0-29']++;
+            else if (s < 50) scoreBuckets['30-49']++;
+            else if (s < 70) scoreBuckets['50-69']++;
+            else if (s < 90) scoreBuckets['70-89']++;
+            else scoreBuckets['90-100']++;
+
+            // Reservations per guest — distinct RES_IDs (any status, any date)
+            const resCount = new Set(dup.guests.map(g => g.RES_ID).filter(v => v != null)).size;
+            if (resCount === 2) sailingsBuckets['2']++;
+            else if (resCount === 3) sailingsBuckets['3']++;
+            else if (resCount === 4) sailingsBuckets['4']++;
+            else if (resCount >= 5 && resCount <= 9) sailingsBuckets['5-9']++;
+            else if (resCount >= 10) sailingsBuckets['10+']++;
+
+            dup.guests.forEach(g => {
+                const pkg = g.PACKAGE_TYPE || 'Unknown';
+                pkgMap[pkg] = (pkgMap[pkg] || 0) + 1;
+                const rev = parseFloat(g.TOTAL_NET_AMOUNT || 0);
+                revMap[pkg] = (revMap[pkg] || 0) + rev;
+                const cabinCat = cabinCategoryFor(g.GUEST_CABIN);
+                if (cabinCat) cabinRevMap[cabinCat] = (cabinRevMap[cabinCat] || 0) + rev;
+                // Heatmap: cabin × month
+                if (cabinCat && g.SAIL_DATE_FROM) {
+                    const sd = new Date(g.SAIL_DATE_FROM);
+                    if (!isNaN(sd)) {
+                        const mk = sd.getFullYear() + '-' + String(sd.getMonth() + 1).padStart(2, '0');
+                        if (!cabinRevByMonth[cabinCat]) cabinRevByMonth[cabinCat] = {};
+                        cabinRevByMonth[cabinCat][mk] = (cabinRevByMonth[cabinCat][mk] || 0) + rev;
+                        monthsSeen.add(mk);
+                    }
+                }
+                const nat = (g.CITIZENSHIP || '').trim();
+                if (nat && nat.toLowerCase() !== 'unknown') natMap[nat] = (natMap[nat] || 0) + 1;
+
+                // Travel agency — count once per RES_ID (reservation level)
+                const resId = g.RES_ID;
+                const agency = (g.AGENCY_NAME || '').trim();
+                if (agency && resId != null && !seenResForAgency.has(resId)) {
+                    seenResForAgency.add(resId);
+                    agencyMap[agency] = (agencyMap[agency] || 0) + 1;
+                }
+
+                const lang = g.LANGUAGE_CODE || 'Unknown';
+                langMap[lang] = (langMap[lang] || 0) + 1;
+
+                const region = regionFor(g.AGENCY_COUNTRY_CODE) || 'Other';
+                regionBkMap[region] = (regionBkMap[region] || 0) + 1;
+                regionRevMap[region] = (regionRevMap[region] || 0) + rev;
+
+                const sailArea = (g.GEOG_AREA_CODE || 'Unknown').trim() || 'Unknown';
+                sailAreaBkMap[sailArea] = (sailAreaBkMap[sailArea] || 0) + 1;
+                sailAreaRevMap[sailArea] = (sailAreaRevMap[sailArea] || 0) + rev;
+
+                const btype = bookingType(g);
+                btypeBkMap[btype] = (btypeBkMap[btype] || 0) + 1;
+                btypeRevMap[btype] = (btypeRevMap[btype] || 0) + rev;
+
+                const itin = (g.COMMENTS || '').trim();
+                if (itin) itineraryMap[itin] = (itineraryMap[itin] || 0) + 1;
+                if (g.SAIL_DATE_FROM) {
+                    const d = new Date(g.SAIL_DATE_FROM);
+                    if (!isNaN(d)) {
+                        const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+                        monthMap[key] = (monthMap[key] || 0) + 1;
+                    }
+                }
+            });
+        });
+
+        const pkgs = Object.entries(pkgMap).sort((a,b) => b[1]-a[1]);
+        const nats = Object.entries(natMap).sort((a,b) => b[1]-a[1]).slice(0, 10);
+        const revSorted = Object.entries(revMap).sort((a,b) => b[1]-a[1]);
+        const revPieTop = revSorted.slice(0, 5);
+        const othersRev = revSorted.slice(5).reduce((s, [,v]) => s + v, 0);
+        const revPie = revPieTop.map(([k, v]) => [k, Math.round(v)]);
+        if (othersRev > 0) revPie.push(['Others', Math.round(othersRev)]);
+
+        const cabinRev = Object.entries(cabinRevMap)
+            .map(([k, v]) => [k, Math.round(v)])
+            .sort((a, b) => b[1] - a[1]);
+
+        const monthsSorted = Object.entries(monthMap).sort((a,b) => a[0].localeCompare(b[0]));
+        const monthLabels = monthsSorted.map(([k]) => {
+            const [y, m] = k.split('-');
+            return new Date(+y, +m - 1).toLocaleDateString('en-GB', { month: 'short', year: '2-digit' });
+        });
+        const monthCounts = monthsSorted.map(([,v]) => v);
+
+        const operators = Object.entries(agencyMap).sort((a,b) => b[1]-a[1]).slice(0, 10);
+        const avgRevPkg = Object.entries(pkgMap)
+            .map(([pkg, count]) => [pkg, Math.round((revMap[pkg] || 0) / count)])
+            .sort((a,b) => b[1]-a[1]);
+        const combos = Object.entries(combosMap).sort((a,b) => b[1]-a[1]).slice(0, 8);
+        const langs = Object.entries(langMap).sort((a,b) => b[1]-a[1]).slice(0, 8);
+
+        // Build heatmap matrix: rows = top cabin categories by total rev, cols = months sorted
+        const heatmapMonths = [...monthsSeen].sort();
+        const heatmapCabins = cabinRev.map(([k]) => k); // already sorted by total revenue desc
+        const heatmap = { months: heatmapMonths, cabins: heatmapCabins, data: cabinRevByMonth };
+
+        // Age buckets sorted by value (most → least)
+        const ageBuckets = ageBucketDefs.map(b => [b.label, ageBucketCounts[b.label]]).sort((a, b) => b[1] - a[1]);
+
+        const regionBookings = Object.entries(regionBkMap).sort((a,b) => b[1]-a[1]);
+        const regionRevenue = Object.entries(regionRevMap).map(([k,v]) => [k, Math.round(v)]).sort((a,b) => b[1]-a[1]);
+        const sailAreaBookings = Object.entries(sailAreaBkMap).sort((a,b) => b[1]-a[1]);
+        const sailAreaRevenue = Object.entries(sailAreaRevMap).map(([k,v]) => [k, Math.round(v)]).sort((a,b) => b[1]-a[1]);
+        const bookingTypePie = [['Direct', btypeBkMap.Direct || 0], ['Indirect', btypeBkMap.Indirect || 0]];
+        const itineraries = Object.entries(itineraryMap).sort((a,b) => b[1]-a[1]).slice(0, 10);
+        const scoreDistEntries = Object.entries(scoreBuckets).sort((a, b) => b[1] - a[1]);
+        const sailingsEntries = Object.entries(sailingsBuckets).sort((a, b) => b[1] - a[1]);
+
+        return { pkgs, revPie, cabinRev, nats, monthLabels, monthCounts, operators, avgRevPkg, combos, langs, heatmap, ageBuckets,
+            regionBookings, regionRevenue, sailAreaBookings, sailAreaRevenue, bookingTypePie,
+            itineraries, scoreDistEntries, sailingsEntries };
+    }
+
+    // Queue/mount helper — calls window._mountMuiChart once the React module loaded;
+    // queues calls if not yet ready.
+    function makeChart(id, config) {
+        chartConfigs[id] = config;
+        if (window._mountMuiChart) {
+            window._mountMuiChart(id, config.type, config.props);
+        } else {
+            (window._muiChartQueue ||= []).push([id, config.type, config.props]);
+        }
+    }
+
+    const truncate = (s, n) => { s = String(s); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
+
+    // valueType: 'count' | 'money'
+    function barConfig(labels, data, color, label, horizontal, valueType) {
+        const fmt = valueType === 'money'
+            ? (v) => v == null ? '' : compactNumber(v)
+            : (v) => v == null ? '' : Math.round(v).toLocaleString();
+        // Compute 15% headroom on the value axis so bars never reach the plot's
+        // right/top edge — MUI X Charts wraps BarLabelPlot inside the chart's
+        // clip-path, so any label drawn past the bar tip would otherwise be clipped.
+        const maxVal = data.reduce((m, v) => (v != null && !isNaN(v) && v > m) ? v : m, 0);
+        const headroom = maxVal > 0 ? Math.ceil(maxVal * 1.15) : 1;
+        // MUI X Charts BarChart props
+        const props = {
+            height: 320,
+            margin: { top: 40, right: horizontal ? 100 : 32, bottom: horizontal ? 30 : 80, left: horizontal ? 140 : 56 },
+            colors: [color],
+            grid: { vertical: horizontal, horizontal: !horizontal },
+            skipAnimation: true,
+            slotProps: { legend: { hidden: true } },
+            sx: {
+                '& .MuiChartsAxis-line, & .MuiChartsAxis-tick': { stroke: 'rgba(148,163,184,0.15)' },
+                '& .MuiChartsAxis-tickLabel': { fill: '#cbd5e1 !important', fontFamily: FONT_FAMILY, fontSize: 11, fontWeight: 500 },
+                '& .MuiChartsGrid-line': { stroke: 'rgba(148,163,184,0.08)' },
+                '& .MuiBarLabel-root': { fill: '#f1f5f9 !important', fontFamily: FONT_FAMILY, fontSize: 11, fontWeight: 600 },
+            },
+            barLabel: (item) => fmt(item.value),
+        };
+        const seriesCommon = { data, label, color, valueFormatter: (v) => Number(v).toLocaleString() };
+        if (horizontal) {
+            props.layout = 'horizontal';
+            props.yAxis = [{ scaleType: 'band', data: labels.map(l => truncate(l, 22)), tickLabelStyle: { fontSize: 11 } }];
+            props.xAxis = [{ valueFormatter: (v) => fmt(v), max: headroom }];
+            props.series = [seriesCommon];
+        } else {
+            props.xAxis = [{ scaleType: 'band', data: labels.map(l => truncate(l, 14)), tickLabelStyle: { angle: -40, textAnchor: 'end', fontSize: 11 } }];
+            props.yAxis = [{ valueFormatter: (v) => fmt(v), max: headroom }];
+            props.series = [seriesCommon];
+        }
+        return { type: 'bar', props };
+    }
+
+    function pieConfig(labels, data) {
+        const total = data.reduce((a, b) => a + (b || 0), 0);
+        const series = [{
+            innerRadius: 70,
+            outerRadius: 130,
+            paddingAngle: 2,
+            cornerRadius: 4,
+            highlightScope: { fade: 'global', highlight: 'item' },
+            data: labels.map((l, i) => ({
+                id: i, label: l, value: data[i] || 0, color: COLORS[i % COLORS.length],
+            })),
+            arcLabel: (item) => total > 0 && (item.value / total) >= 0.04
+                ? ((item.value / total) * 100).toFixed(1) + '%' : '',
+            arcLabelMinAngle: 14,
+            valueFormatter: (item) => Number(item.value).toLocaleString(),
+        }];
+        const props = {
+            height: 320,
+            series,
+            margin: { right: 140 },
+            colors: COLORS,
+            slotProps: {
+                legend: {
+                    direction: 'column',
+                    position: { vertical: 'middle', horizontal: 'right' },
+                    itemMarkWidth: 10,
+                    itemMarkHeight: 10,
+                    markGap: 8,
+                    itemGap: 10,
+                    labelStyle: { fill: '#cbd5e1', fontFamily: FONT_FAMILY, fontSize: 12, fontWeight: 500 },
+                },
+            },
+            sx: {
+                '& .MuiPieArcLabel-root': { fill: '#ffffff !important', fontFamily: FONT_FAMILY, fontWeight: 700, fontSize: 12 },
+            },
+        };
+        return { type: 'pie', props };
+    }
+
+    function formatMonthShort(yyyymm) {
+        const [y, m] = yyyymm.split('-');
+        return new Date(+y, +m - 1).toLocaleDateString('en-GB', { month: 'short', year: '2-digit' });
+    }
+
+    function formatMoney(v) {
+        if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+        if (v >= 1e3) return Math.round(v / 1e3) + 'K';
+        return Math.round(v).toString();
+    }
+
+    function renderHeatmap(elemId, hm) {
+        heatmapData[elemId] = hm;
+        if (window._mountMuiHeatmap) {
+            window._mountMuiHeatmap(elemId, hm);
+        } else {
+            (window._muiHeatmapQueue ||= []).push([elemId, hm]);
+        }
+    }
+
+    window._dashboardRender = function(duplicates) {
+        const d = computeChartData(duplicates);
+
+        makeChart('chart-pkg-bar',  barConfig(d.pkgs.map(x => x[0]), d.pkgs.map(x => x[1]), '#38bdf8', 'Bookings', false, 'count'));
+        makeChart('chart-rev-pie',  pieConfig(d.revPie.map(x => x[0]), d.revPie.map(x => x[1])));
+        makeChart('chart-cabin-rev', barConfig(d.cabinRev.map(x => x[0]), d.cabinRev.map(x => x[1]), '#34d399', 'Revenue', true, 'money'));
+        makeChart('chart-nat-bar',  barConfig(d.nats.map(x => x[0]), d.nats.map(x => x[1]), '#a78bfa', 'Guests', true, 'count'));
+        makeChart('chart-monthly',  barConfig(d.monthLabels, d.monthCounts, '#34d399', 'Bookings', false, 'count'));
+        makeChart('chart-operators', barConfig(d.operators.map(x => x[0]), d.operators.map(x => x[1]), '#fb7185', 'Reservations', true, 'count'));
+        makeChart('chart-avg-rev',  barConfig(d.avgRevPkg.map(x => x[0]), d.avgRevPkg.map(x => x[1]), '#f59e0b', 'Avg Revenue', false, 'money'));
+        makeChart('chart-combos',   barConfig(d.combos.map(x => x[0]), d.combos.map(x => x[1]), '#e879f9', 'Guests', true, 'count'));
+        makeChart('chart-lang',     barConfig(d.langs.map(x => x[0]), d.langs.map(x => x[1]), '#60a5fa', 'Guests', true, 'count'));
+        makeChart('chart-age',      barConfig(d.ageBuckets.map(x => x[0]), d.ageBuckets.map(x => x[1]), '#fbbf24', 'Guests', false, 'count'));
+        makeChart('chart-region-bookings',  barConfig(d.regionBookings.map(x => x[0]), d.regionBookings.map(x => x[1]), '#38bdf8', 'Bookings', false, 'count'));
+        makeChart('chart-region-rev',       barConfig(d.regionRevenue.map(x => x[0]), d.regionRevenue.map(x => x[1]), '#34d399', 'Revenue', false, 'money'));
+        makeChart('chart-sailarea-bookings', barConfig(d.sailAreaBookings.map(x => x[0]), d.sailAreaBookings.map(x => x[1]), '#a78bfa', 'Bookings', false, 'count'));
+        makeChart('chart-booking-type',     pieConfig(d.bookingTypePie.map(x => x[0]), d.bookingTypePie.map(x => x[1])));
+        makeChart('chart-score-dist',       barConfig(d.scoreDistEntries.map(x => x[0]), d.scoreDistEntries.map(x => x[1]), '#facc15', 'Guests', false, 'count'));
+        makeChart('chart-sailings-per-guest', barConfig(d.sailingsEntries.map(x => x[0]), d.sailingsEntries.map(x => x[1]), '#38bdf8', 'Guests', false, 'count'));
+        makeChart('chart-itineraries',      barConfig(d.itineraries.map(x => x[0]), d.itineraries.map(x => x[1]), '#a78bfa', 'Bookings', true, 'count'));
+        renderHeatmap('chart-cabin-month-heatmap', d.heatmap);
+    };
+
+    if (window._pendingDashRender && window._allDuplicates && window._allDuplicates.length) {
+        window._pendingDashRender = false;
+        window._dashboardRender(window._allDuplicates);
+    }
+
+    // ── Chart expand / modal ─────────────────────────────────────────
+    const MODAL_CHART_ID = 'modalMuiChart';
+
+    function expandChartCard(card) {
+        const titleEl = card.querySelector('h3');
+        const title = titleEl ? titleEl.firstChild.textContent.trim() : 'Chart';
+        const muiChart = card.querySelector('.mui-chart');
+        const heatmap = card.querySelector('.heatmap-wrap');
+        document.getElementById('chartModalTitle').textContent = title;
+        const body = document.getElementById('chartModalBody');
+
+        if (muiChart && chartConfigs[muiChart.id]) {
+            const cfg = chartConfigs[muiChart.id];
+            // Unmount any previous modal chart and re-mount fresh
+            if (window._unmountMuiChart) window._unmountMuiChart(MODAL_CHART_ID);
+            body.innerHTML = `<div class="chart-wrap" style="height: 70vh"><div class="mui-chart" id="${MODAL_CHART_ID}"></div></div>`;
+            // Enlarge by passing a taller height
+            const bigProps = Object.assign({}, cfg.props, { height: window.innerHeight * 0.7 });
+            if (window._mountMuiChart) window._mountMuiChart(MODAL_CHART_ID, cfg.type, bigProps);
+            else (window._muiChartQueue ||= []).push([MODAL_CHART_ID, cfg.type, bigProps]);
+        } else if (heatmap) {
+            const hm = heatmapData[heatmap.id];
+            body.innerHTML = `<div class="heatmap-wrap" id="modalHeatmap"></div>`;
+            if (hm) renderHeatmap('modalHeatmap', hm);
+            else document.getElementById('modalHeatmap').innerHTML = heatmap.innerHTML;
+        } else {
+            return;
+        }
+        document.getElementById('chartModal').classList.add('open');
+    }
+
+    function closeChartModal(event, force) {
+        if (!force && event && event.target.id !== 'chartModal') return;
+        document.getElementById('chartModal').classList.remove('open');
+        if (window._unmountMuiChart) window._unmountMuiChart(MODAL_CHART_ID);
+    }
+
+    // Inject an expand button into every chart card on the dashboard
+    function injectExpandButtons() {
+        document.querySelectorAll('#tab-dashboard .chart-card').forEach(card => {
+            if (card.querySelector('.expand-btn')) return;
+            const btn = document.createElement('button');
+            btn.className = 'expand-btn';
+            btn.title = 'Expand';
+            btn.textContent = '⛶';
+            btn.addEventListener('click', (e) => { e.stopPropagation(); expandChartCard(card); });
+            card.appendChild(btn);
+        });
+    }
+
+    // Close on ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeChartModal(null, true);
+    });
+
+    // Expose for inline onclick handlers (modal close)
+    window.closeChartModal = closeChartModal;
+    window.expandChartCard = expandChartCard;
+
+    // Run injection now and also after dashboard re-renders (in case card list changes)
+    injectExpandButtons();
+    const _origRender = window._dashboardRender;
+    window._dashboardRender = function(dups) {
+        _origRender(dups);
+        injectExpandButtons();
+    };
+})();
+</script>
+
 </body>
 </html>

@@ -1,12 +1,13 @@
 @echo off
-title Aroya Guest Multi-Itinerary Finder
+title Aroya Repeat Guests Insights
 echo.
 echo ============================================================
-echo   Aroya - Guest Multi-Itinerary Finder
+echo   Aroya - Repeat Guests Insights
 echo ============================================================
 echo.
 echo Starting server...
-echo Open your browser at: http://localhost:5001
+echo Local URL:    http://localhost:5001
+echo Network URLs will be printed below once the server starts.
 echo Press Ctrl+C to stop.
 echo.
 python guest_duplicates.py
