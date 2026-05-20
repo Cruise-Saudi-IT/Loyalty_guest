@@ -637,10 +637,16 @@ async function loadData() {
     if (!staffNameSet.size) await loadStaffNames();
     if (!cabinCategoryMap.size) await loadCabinCategories();
 
-    // Poll cache-status until ready, then fetch data
-    for (let attempt = 0; attempt < 60; attempt++) {
+    // Poll cache-status until ready, then fetch data.
+    // Oracle rebuild can take 5–10 minutes on a cold cache, so the cap is generous
+    // (240 × 3s = 12 min). If we still hit the cap, show a useful timeout message
+    // instead of falling through into a misleading "Failed to fetch data".
+    let cacheReady = false;
+    let lastStatus = 'pending';
+    for (let attempt = 0; attempt < 240; attempt++) {
         const statusRes = await fetch('/api/cache-status');
         const statusData = await statusRes.json();
+        lastStatus = statusData.status;
         if (statusData.status === 'error') {
             setContent('mainContent', `<div class="error-box">Database error: ${esc(statusData.error)}</div>`);
             return;
@@ -651,7 +657,12 @@ async function loadData() {
             await new Promise(r => setTimeout(r, 3000));
             continue;
         }
+        cacheReady = true;
         break; // status === 'ok'
+    }
+    if (!cacheReady) {
+        setContent('mainContent', `<div class="error-box">Cache is still rebuilding after 12 minutes (status: ${esc(lastStatus)}). The Oracle query may be slower than usual — try Refresh in a minute, or check the Flask logs.</div>`);
+        return;
     }
 
     try {
@@ -1640,7 +1651,7 @@ loadData();
         // MUI X Charts BarChart props
         const props = {
             height: 320,
-            margin: { top: 40, right: horizontal ? 100 : 32, bottom: horizontal ? 30 : 80, left: horizontal ? 140 : 56 },
+            margin: { top: 40, right: horizontal ? 100 : 32, bottom: horizontal ? 30 : 80, left: horizontal ? 220 : 56 },
             colors: [color],
             grid: { vertical: horizontal, horizontal: !horizontal },
             skipAnimation: true,
@@ -1656,7 +1667,20 @@ loadData();
         const seriesCommon = { data, label, color, valueFormatter: (v) => Number(v).toLocaleString() };
         if (horizontal) {
             props.layout = 'horizontal';
-            props.yAxis = [{ scaleType: 'band', data: labels.map(l => truncate(l, 22)), tickLabelStyle: { fontSize: 11 } }];
+            // Truncate long labels but dedupe — MUI X uses band values as keys,
+            // so two rows that truncate to the same string would otherwise collapse
+            // onto one bar (we saw "4N Jeddah – Jeddah (T..." collide at 22 chars).
+            const seenLabels = {};
+            const bandLabels = labels.map(l => {
+                const t = truncate(l, 38);
+                if (seenLabels[t] != null) {
+                    seenLabels[t] += 1;
+                    return t + ' (' + seenLabels[t] + ')';
+                }
+                seenLabels[t] = 1;
+                return t;
+            });
+            props.yAxis = [{ scaleType: 'band', data: bandLabels, tickLabelStyle: { fontSize: 11 } }];
             props.xAxis = [{ valueFormatter: (v) => fmt(v), max: headroom }];
             props.series = [seriesCommon];
         } else {

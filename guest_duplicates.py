@@ -246,8 +246,10 @@ def _fetch_duplicates():
                 nps_hits += 1
         print(f"[{datetime.datetime.now():%Y-%m-%d %H:%M:%S}] NPS attached: {nps_hits} row(s), "
               f"{len(nps_index)} clients in NPS view")
-    except ZohoAnalyticsError as e:
-        print(f"[{datetime.datetime.now():%Y-%m-%d %H:%M:%S}] NPS fetch skipped: {e}")
+    except Exception as e:
+        # NPS is optional enrichment — any error (auth, SSL, timeout, etc.)
+        # should NOT kill the cache refresh.
+        print(f"[{datetime.datetime.now():%Y-%m-%d %H:%M:%S}] NPS fetch skipped: {type(e).__name__}: {e}")
 
     try:
         desk_index = fetch_desk_index()
@@ -267,8 +269,16 @@ def _fetch_duplicates():
                 g['_NO_COMPLAINT_FLAG'] = True
         print(f"[{datetime.datetime.now():%Y-%m-%d %H:%M:%S}] Desk attached: {desk_hits} "
               f"email match(es), {len(desk_index)} emails in Desk index")
-    except ZohoDeskError as e:
-        print(f"[{datetime.datetime.now():%Y-%m-%d %H:%M:%S}] Desk fetch skipped: {e}")
+    except Exception as e:
+        # Desk is optional enrichment — Zoho's SSL was dropping connections
+        # mid-fetch and a narrow ZohoDeskError catch let the exception escape,
+        # killing the whole refresh. Any failure here should just skip enrichment.
+        print(f"[{datetime.datetime.now():%Y-%m-%d %H:%M:%S}] Desk fetch skipped: {type(e).__name__}: {e}")
+        # Default flags so downstream logic still works.
+        for g in surviving_rows:
+            g.setdefault('_HAS_OPEN_TICKET', False)
+            g.setdefault('_HAS_PAST_COMPLAINT', False)
+            g.setdefault('_NO_COMPLAINT_FLAG', True)
 
     duplicates = []
     excluded_open_ticket_groups = 0

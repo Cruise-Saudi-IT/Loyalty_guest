@@ -6,6 +6,10 @@ __pycache__/
 # Flask logs
 flask.log
 flask.err.log
+flask.log.err
+
+# Claude Code local config
+.claude/
 
 # Node / Vite (frontend build)
 frontend/node_modules/
